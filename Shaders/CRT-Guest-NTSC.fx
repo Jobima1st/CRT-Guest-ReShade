@@ -161,7 +161,7 @@ uniform float ntsc_shpe <
 	ui_max = 1.0;
 	ui_step = 0.05;
 	ui_label = "NTSC Sharpness Shape";
-> = 0.75;
+> = 0.80;
 
 uniform float CSHARPEN <
 	ui_type = "drag";
@@ -1872,7 +1872,7 @@ float4 Signal_1_PS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	float3 col0=tex2D(NTSC_S02, texcoord).rgb;
 	float3 yiq1=rgb2yiq(col0);
 	yiq1.x=pow(yiq1.x,ntsc_gamma); float lum=yiq1.x;
-	float2 dx = float2(OriginalSize.z, 0.0);
+	float2 dx = float2(OrgSize.z, 0.0);
 	float c1 = get_luma(texture(Source, vTexCoord - dx).rgb);
 	float c2 = get_luma(texture(Source, vTexCoord + dx).rgb);
 	if(ntsc_phase==4.0)
@@ -2026,41 +2026,91 @@ float4 Signal_2_PS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 
 float4 Signal_3_PS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Target
 {
-	float2 dx=float2(0.25*OrgSize.z,0.0)/4.0;
+	float2 dx=float2(0.25*OrgSize.z/4.0,0.0);
+	float2 xx=float2(0.5*OrgSize.z,0.0);
+	float2 texcoord0 = (floor(OrgSize.xy * vTexCoord) + 0.5)*OrgSize.zw;
+	float texcoordx = OrgSize.x * (tex_2.x+dx.x) - 0.5;   
+	float fpx = fract(tcoordx);
+	tcoordx = (floor(tcoordx ) + 0.5) * OrgSize.z;
 	float2 tcoord=tex_2+dx;
-	float2 offset=float2(0.5*OrgSize.z,0.0);
-	float3 ll1=tex2D(NTSC_S04,tcoord+     offset).xyz;
-	float3 ll2=tex2D(NTSC_S04,tcoord-     offset).xyz;
-	float3 ll3=tex2D(NTSC_S04,tcoord+0.50*offset).xyz;
-	float3 ll4=tex2D(NTSC_S04,tcoord-0.50*offset).xyz;
-	float3 ref=tex2D(NTSC_S04,tcoord).xyz;
-	float lum1=min(tex2D(NTSC_S04,tex_2-dx).a, tex2D(NTSC_S04,tex_2+dx).a);
-	float lum2=max(ref.x,0.0);
-	float dif=max(max(abs(ll1.x-ll2.x),abs(ll1.y-ll2.y)),max(abs(ll1.z-ll2.z),abs(ll1.x*ll1.x-ll2.x*ll2.x)));
-	float dff=max(max(abs(ll3.x-ll4.x),abs(ll3.y-ll4.y)),max(abs(ll3.z-ll4.z),abs(ll3.x*ll3.x-ll4.x*ll4.x)));
-	float lc=(1.0-smoothstep(0.10,0.20,abs(lum2-lum1)))*pow(dff,0.125);
-	float sweight=smoothstep(0.05-0.03*lc,0.45-0.40*lc,dif);
-	float3 signal=ref;
-	if(abs(ntsc_shrp)>-0.1)
+	float3 ll1=tex2D(NTSC_S04,tcoord+     xx).xyz;
+	float3 ll2=tex2D(NTSC_S04,tcoord-     xx).xyz;
+
+	float dy = 0.0;
+
+	xx = float2(OrgSize.z, 0.0);
+
+	float phase = (ntsc_phase < 1.5) ? ((OrgSize.x > 300.0) ? 2.0 : 3.0) : ((ntsc_phase > 2.5) ? 3.0 : 2.0);
+	if (ntsc_phase == 4.0) phase = 3.0;
+
+	float ca = tex2D(NTSC_S02, texcoord0 - xx - xx).a;
+	float c0 = tex2D(NTSC_S02, texcoord0 - xx).a;
+	float c1 = tex2D(NTSC_S02, texcoord0     ).a;
+	float c2 = tex2D(NTSC_S02, texcoord0 + xx).a;
+	float cb = tex2D(NTSC_S02, texcoord0 + xx + xx).a;
+
+	float th = (phase < 2.5) ? 0.025 : 0.0075;
+	float line0  = smothstep(th, 0.0, min(abs(c1-c0),abs(c2-c1)));
+	float line1  = max(smothstep(th, 0.0, min(abs(ca-c0),abs(c2-cb))), line0);
+	float line2  = max(smothstep(th, 0.0, min(abs(ca-c2),abs(c0-cb))), line1);
+   
+	if (params.ntsc_rainbow1 > 0.5 && phase < 2.5)
 	{
-	float lummix=lerp(lum2,lum1,0.1*abs(ntsc_shrp));
-	float lm1=lerp(lum2*lum2 ,lum1*lum1 ,0.1*abs(ntsc_shrp));lm1=sqrt(lm1);
-	float lm2=lerp(sqrt(lum2),sqrt(lum1),0.1*abs(ntsc_shrp));lm2=lm2* lm2 ;
+		float ybool = 1.0; bool ybool1 = (c0 == c1 && c1 == c2);
+		if ((params.ntsc_rainbow1 < 1.5) && bool(line0)) ybool = 0.0; else
+		if ((params.ntsc_rainbow1 < 2.5) && bool(line2)) ybool = 0.0; else 
+		if (ybool1) ybool = 0.0;
+		float line_no  = floor(mod(params.OriginalSize.y*vTexCoord.y, 2.0));
+		float frame_no = floor(mod(float(params.FrameCount),2.0));
+		float ii = abs(line_no-frame_no);
+		dy = ii * params.OriginalSize.w*ybool;
+	}
+	float3 ref=tex2D(NTSC_S04,tcoord).xyz;
+	float2 orig = ref.yz;
+	ref.yz = tex2D(Source, tcoord + float2(0.0, dy)).yz;
+	float lum1=min(tex2D(NTSC_S02,tex_2-dx).a, tex2D(NTSC_S02,tex_2+dx).a);
+	float lum2=ref.x;
+
+	float3 ll3 = abs(ll1-ll2);
+
+	float dif=max(max(ll3.x-ll3.y),max(ll3.z,abs(ll1.x*ll1.x-ll2.x*ll2.x)));
+	float dff=pow(dif, 0.125);
+	float lc=smoothstep(0.20, 0.10, abs(lum2-lum1))*dff;
+	float tmp=smoothstep(0.05-0.03*lc,0.425-0.375*lc,dif);
+	float tmp1 = pow((tmp+0.1)/1.1, 0.25);
+	float sweight = lerp(tmp, tmp1, line0);
+	float sweighr = lerp(tmp, tmp1, line2);
+	float3 signal=ref;
+	float ntsc_sharp = abs(params.ntsc_sharp);
+	if(ntsc_shrp>0.25)
+	{
+	float mixer = sweight;
+	if (params.ntsc_sharp > 0.25) mixer = sweighr; mixer*=0.1*ntsc_sharp;
+	float lummix = lerp(lum2, lum1, mixer);
+	float lm1=lerp(lum2*lum2 ,lum1*lum1 ,mixer);lm1=sqrt(lm1);
+	float lm2=lerp(sqrt(lum2),sqrt(lum1),mixer);lm2=lm2* lm2 ;
 	float k1=abs(lummix-lm1)+0.00001;
 	float k2=abs(lummix-lm2)+0.00001;
-	lummix=min((k2*lm1+k1*lm2)/(k1+k2),1.0);
-	signal.x=lerp(lum2,lummix,smoothstep(0.25,0.4,pow(dff,0.125)));
+	signal.x=min((k2*lm1 + k1*lm2)/(k1+k2), 1.0);
 	signal.x=min(signal.x,max(ntsc_shpe*signal.x,lum2));
-	}else
-	signal.x=clamp(signal.x,0.0,1.0);
-	float3 rgb=signal;
-	if(ntsc_shrp<-0.1)
-	{
-	rgb.x=lerp(ref.x,rgb.x,sweight);
 	}
-	rgb.x=pow(rgb.x,1.0/ntsc_gamma);
-	rgb=clamp(yiq2rgb(rgb),0.0,1.0);
-	return float4(rgb,1.0);
+	if ((params.ntsc_charp + params.ntsc_charp3) > 0.25)
+		{
+		float mixer = sweight;
+		if (params.ntsc_sharp > 0.25) mixer = sweighr;
+		mixer = lerp(smothstep(0.075,0.125,max(l3.y,l3.z)), smothstep(0.015,0.0275,dif), line2)*mixer; 
+		mixer*=0.1*((phase < 2.5) ? params.ntsc_charp : params.ntsc_charp3);
+		tcoord = float2(tcoordx,tcoord.y);
+		float3 orig_ch = rgb2yiq(mix(tex2D(NTSC_S02, tcoord).rgb , tex2D(NTSC_S02, tcoord+xx).rgb, clamp(1.5*fpx-0.25,0.0,1.0)));
+		signal.yz = lerp(signal.yz, orig_ch.yz, mixer);
+		}
+	if (params.ntsc_rainbow1 == 2.0 && phase < 2.5)
+	{
+		signal.yz = lerp(signal.yz, orig, sweighr);
+	}
+	signal.x = pow(signal.x, 1.0/params.ntsc_gamma);
+	signal = clamp(yiq2rgb(signal), 0.0, 1.0);
+	return float4(signal,1.0);
 }
 
 float4 SharpnessPS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Target
