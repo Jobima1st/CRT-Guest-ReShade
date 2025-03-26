@@ -1,10 +1,10 @@
 /*
 
-	CRT - Guest - NTSC (Copyright (C) 2018-2024 guest(r) - guest.r@gmail.com)
+	CRT - Guest - NTSC (Copyright (C) 2018-2025 guest(r))
 
 	Incorporates many good ideas and suggestions from Dr. Venom.
 
-	I would also like give thanks to many Libretro forums members for continuous feedbacks, suggestions and caring about the shader.
+	I would also like give thanks to many Libretro forums members for continuous feedbacks, suggestions and using the shader.
 
 	This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License
 	as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.
@@ -117,10 +117,10 @@ uniform float ntsc_gamma <
 
 uniform float ntsc_rainbow <
 	ui_type = "drag";
-	ui_min = -1.0;
-	ui_max = 1.0;
-	ui_step = 0.1;
-	ui_label = "NTSC Coloring/Rainbow Effect";
+	ui_min = 0.0;
+	ui_max = 3.0;
+	ui_step = 1.0;
+	ui_label = "NTSC Coloring/Rainbow Effect (2-phase)";
 > = 0.0;
 
 uniform float ntsc_ring <
@@ -137,6 +137,22 @@ uniform float ntsc_shrp <
 	ui_max = 10.0;
 	ui_step = 0.5;
 	ui_label = "NTSC Sharpness (Negative:Adaptive)";
+> = 0.0;
+
+uniform float ntsc_charp <
+	ui_type = "drag";
+	ui_min = 0.0;
+	ui_max = 10.0;
+	ui_step = 0.5;
+	ui_label = "NTSC Preserve 'Edge' Colors 2-phase";
+> = 0.0;
+
+uniform float ntsc_charp3 <
+	ui_type = "drag";
+	ui_min = 0.0;
+	ui_max = 10.0;
+	ui_step = 0.5;
+	ui_label = "NTSC Preserve 'Edge' Colors 3-phase";
 > = 0.0;
 
 uniform float ntsc_shpe <
@@ -1445,6 +1461,11 @@ float get_luma(float3 c)
 	return dot(c,float3(0.2989,0.5870,0.1140));
 }
 
+float smothstep (float e0, float e1, float x)
+{
+	return clamp((x - e0) / (e1 - e0), 0.0, 1.0);
+}
+
 float3 crt_mask(float2 pos,float mx,float mb)
 {
 	float3 mask=mask_drk;
@@ -1836,90 +1857,72 @@ float4 Signal_1_PS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	float phase= (ntsc_phase<1.5)?((OrgSize.x>300.0)? 2.0:3.0):((ntsc_phase>2.5)?3.0:2.0);
 	if(ntsc_phase==4.0)phase=3.0;
 	float res=ntsc_scale;
-	float mod1=2.0;
-	float mod2=3.0;
 	float CHROMA_MOD_FREQ=(phase<2.5)?(4.0*pii/15.0):(pii/3.0);
 	float ARTIFACT=cust_artifacting;
 	float FRINGING=cust_fringing;
 	float BRIGHTNESS=ntsc_brt;
 	float SATURATION=ntsc_sat;
 	float MERGE=0.0;
-	float mix1=0.0;
 	if(ntsc_fields== 1.0&&phase==3.0) MERGE=1.0;else
 	if(ntsc_fields== 2.0) MERGE=0.0;else
 	if(ntsc_fields== 3.0) MERGE=1.0;
 	float2 pix_no=texcoord*OrgSize.xy*pix_res* float2(4.0,1.0);
+	float mit = params.ntsc_taps; if (params.ntsc_charp > 0.25 && phase == 2.0) mit = clamp(mit, 8.0, min(params.ntsc_taps,14.0));
+	mit = smothstep(16.0, 8.0, mit) * 0.325;
 	float3 col0=tex2D(NTSC_S02, texcoord).rgb;
-	float3 yiq1=rgb2yiq(col0);float c0=yiq1.x;
+	float3 yiq1=rgb2yiq(col0);
 	yiq1.x=pow(yiq1.x,ntsc_gamma); float lum=yiq1.x;
-	float2 dx=float2(OrgSize.z,0.0);
-	float3 c1=tex2D(NTSC_S02,texcoord-dx).rgb;
-	float3 c2=tex2D(NTSC_S02,texcoord+dx).rgb;
-	if(abs(ntsc_rainbow)>0.025)
-	{
-	float2 dy=float2(0.0,OrgSize.w);
-	float3 c3=tex2D(NTSC_S02,texcoord+dy).rgb;
-	float3 c4=tex2D(NTSC_S02,texcoord+dx+dy ).rgb;
-	float3 c5=tex2D(NTSC_S02,texcoord+dx+dx ).rgb;
-	float3 c6=tex2D(NTSC_S02,texcoord+dx*3.0).rgb;
-	c1.x=get_luma(c1);
-	c2.x=get_luma(c2);
-	c3.x=get_luma(c3);
-	c4.x=get_luma(c4);
-	c5.x=get_luma(c5);
-	c6.x=get_luma(c6);
-	float mix2=min(5.0*min(min(abs(c0-c1.x),abs(c0-c2.x)),min(abs(c2.x-c5.x),abs(c5.x-c6.x))),1.0);
-	float bar1=1.0-min(7.0*min(max(max(c0,c3.x)-0.15,0.0),max(max(c2.x,c4.x)-0.15,0.0)),1.0);
-	float bar2=step(abs(c1.x-c2.x)+abs(c0-c5.x)+abs(c2.x-c6.x),0.325);
-	mix1=bar1*bar2*mix2*(1.0-min(10.0*min(abs(c0-c3.x),abs(c2.x-c4.x)),1.0));
-	mix1=mix1*ntsc_rainbow;
-	}
+	float2 dx = float2(OriginalSize.z, 0.0);
+	float c1 = get_luma(texture(Source, vTexCoord - dx).rgb);
+	float c2 = get_luma(texture(Source, vTexCoord + dx).rgb);
 	if(ntsc_phase==4.0)
 	{
 	float mix3=min(5.0*abs(c1.x-c2.x),1.0);
-	c1.x=pow(c1.x,ntsc_gamma);
-	c2.x=pow(c2.x,ntsc_gamma);
-	yiq1.x=lerp(min(0.5*(yiq1.x+max(c1.x,c2.x)),max(yiq1.x,min(c1.x,c2.x))),yiq1.x,mix3);
+	c1=pow(c1,ntsc_gamma);
+	c2=pow(c2,ntsc_gamma);
+	yiq1.x=lerp(min(0.5*(yiq1.x+max(c1,c2)),max(yiq1.x,min(c1,c2))),yiq1.x,mix3);
 	}
 	float3 yiq2=yiq1;
 	float3 yiqs=yiq1;
 	float3 yiqz=yiq1;
-	float taps_comp=1.0+ 2.0*step(ntsc_taps,15.5);
+	float3 tmp =  yiq;
 	if(MERGE>0.5)
 	{
-	float chroma_phase2=(phase<2.5)?pii*(mod(pix_no.y,mod1)+mod(framecount+1,2.)):0.6667*pii*(mod(pix_no.y,mod2)+mod(framecount+1,2.));
-	float mod_phase2=chroma_phase2 *(1.0-mix1)+pix_no.x*CHROMA_MOD_FREQ*taps_comp;
+	float chroma_phase2=(phase<2.5)?pii*(mod(pix_no.y,2.0)+mod(framecount+1.0,2.0)):0.6667*pii*(mod(pix_no.y,3.0)+mod(framecount+1.0,2.0));
+	float mod_phase2=chroma_phase2+pix_no.x*CHROMA_MOD_FREQ;
 	float i_mod2=cos(mod_phase2);
 	float q_mod2=sin(mod_phase2);
 	yiq2.yz*=float2(i_mod2,q_mod2);
 	yiq2=mul(mix_m,yiq2);
 	yiq2.yz*=float2(i_mod2,q_mod2);
+	yiq2.yz = lerp(yiq2.yz, tmp.yz, mit);
 	if(res>1.025)
 	{
-	mod_phase2=chroma_phase2 *(1.0-mix1) +res *pix_no.x*CHROMA_MOD_FREQ*taps_comp;
+	mod_phase2=chroma_phase2 +pix_no.x*CHROMA_MOD_FREQ;
 	i_mod2=cos(mod_phase2);
 	q_mod2=sin(mod_phase2);
 	yiqs.yz*=float2(i_mod2,q_mod2);
 	yiq2.x=dot(yiqs,mix_m[0]);
 	}
 	}
-	float chroma_phase1=(phase<2.5)?pii*(mod(pix_no.y,mod1)+mod(framecount  ,2.)):0.6667*pii*(mod(pix_no.y,mod2)+mod(framecount  ,2.));
-	float mod_phase1=chroma_phase1 *(1.0-mix1)+pix_no.x*CHROMA_MOD_FREQ*taps_comp;
+	float chroma_phase1=(phase<2.5)?pii*(mod(pix_no.y,2.0)+mod(framecount  ,2.0)):0.6667*pii*(mod(pix_no.y,3.0)+mod(framecount  ,2.0));
+	float mod_phase1=chroma_phase1 +pix_no.x*CHROMA_MOD_FREQ;
 	float i_mod1=cos(mod_phase1);
 	float q_mod1=sin(mod_phase1);
 	yiq1.yz*=float2(i_mod1,q_mod1);
 	yiq1=mul(mix_m,yiq1);
 	yiq1.yz*=float2(i_mod1,q_mod1);
+	yiq1.yz = lerp(yiq1.yz, tmp.yz, mit);
 	if(res>1.025)
 	{
-	mod_phase1=chroma_phase1 *(1.0-mix1) +res *pix_no.x*CHROMA_MOD_FREQ*taps_comp;
+	mod_phase1=chroma_phase1 + pix_no.x*CHROMA_MOD_FREQ*res;
 	i_mod1=cos(mod_phase1);
 	q_mod1=sin(mod_phase1);
 	yiqz.yz*=float2(i_mod1,q_mod1);
 	yiq1.x=dot(yiqz,mix_m[0]);
 	}
 	if(ntsc_phase==4.0){yiq1.x=lum;yiq2.x=lum;}
-	yiq1=(MERGE<0.5)?yiq1:0.5*(yiq1+yiq2);
+	if (MERGE<0.5) { if (ntsc_rainbow < 0.5 || phase > 2.5) yiq1 = 0.5*(yiq1 + yiq2); else yiq1.x = 0.5*(yiq1.x + yiq2.x); };
 	return float4(yiq1,lum);
 }
 
