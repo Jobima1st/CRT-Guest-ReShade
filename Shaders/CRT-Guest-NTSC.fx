@@ -1968,7 +1968,9 @@ float4 Signal_2_PS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	if(phase<2.5)
 	{
 	float loop=max(ntsc_taps,8.0);
-	float2 dx=float2(one.x,0.0);
+	if (ntsc_charp > 0.25) loop = min(loop, 14.0);
+	float mit = 1.0 + 0.0375*pow(smothstep(16.0, 8.0, loop), 0.5);
+	float2 dx=float2(one.x*mit,0.0);
 	float2 xd=dx;int loopstart=int(TAPS_2_phase-loop);float taps=0.0;
 	float laps=ntsc_taps+1.0;
 	float ssub=loop-loop/ntsc_cscale1;
@@ -1989,6 +1991,9 @@ float4 Signal_2_PS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	}else{
 	float loop=min(ntsc_taps,TAPS_3_phase); one.y=one.y/ntsc_cscale2;
 	float3 dx=float3(one.x,one.y,0.0);
+	float mit = 1.0;
+	if (ntsc_phase == 4.0) { loop = max(ntsc_taps, 8.0); mit = 1.0 + 0.0375*pow(smothstep(16.0, 8.0, loop), 0.5); }
+	float3 dx1 = dx; dx.x*=mit;
 	float3 xd=dx;int loopstart=int(24.0-loop);
 	for(i=loopstart;i<24;i++)
 	{
@@ -2003,20 +2008,20 @@ float4 Signal_2_PS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	signal+=tex2D(NTSC_S03,tex_1).xyz*tmps;
 	signal =signal/wsum;
 	}
+	signal.x = clamp(signal.x, 0.0, 1.0);
 	if(ntsc_ring>0.05)
 	{
 	float2 dx=float2(OrgSize.z/min(res,1.0),0.0);
-	float a=tex2D(NTSC_S03,tex_1-1.5*dx).a;
-	float b=tex2D(NTSC_S03,tex_1-0.5*dx).a;
-	float c=tex2D(NTSC_S03,tex_1+1.5*dx).a;
-	float d=tex2D(NTSC_S03,tex_1+0.5*dx).a;
+	float a=tex2D(NTSC_S03,tex_1-2.0*dx).a;
+	float b=tex2D(NTSC_S03,tex_1-    dx).a;
+	float c=tex2D(NTSC_S03,tex_1+2.0*dx).a;
+	float d=tex2D(NTSC_S03,tex_1+    dx).a;
 	float e=tex2D(NTSC_S03,tex_1       ).a;
 	signal.x=lerp(signal.x,clamp(signal.x,min(min(min(a,b),min(c,d)),e),max(max(max(a,b),max(c,d)),e)),ntsc_ring);
 	}
-	float3 x=rgb2yiq(tex2D(NTSC_S02,tex_1).rgb);
-	signal.x=clamp(signal.x,-1.0,1.0);
-	float3 rgb=signal;
-	return float4(rgb,x.x);
+
+	float orig = get_luma(tex2D(NTSC_S02, tex_1).rgb);
+	return float4(signal,x);
 }
 
 float4 Signal_3_PS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Target
