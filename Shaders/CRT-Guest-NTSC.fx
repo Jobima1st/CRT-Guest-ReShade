@@ -249,7 +249,7 @@ uniform float CP <
 	ui_min = -1.0;
 	ui_max = 5.0;
 	ui_step = 1.0;
-	ui_label = "CRT Profile: EBU | P22 | SMPTE-C | Philips | Trinitron";
+	ui_label = "CRT Mask: 0:CGWG | 1-4:Lottes | 5-13:Trinitron";
 > = 0.0;
 
 uniform float TNTC <
