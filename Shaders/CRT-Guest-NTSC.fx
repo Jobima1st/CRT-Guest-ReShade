@@ -378,7 +378,7 @@ uniform float interm <
 	ui_max = 5.0;
 	ui_step = 1.0;
 	ui_label = "Interlace Mode: 0:OFF | 1-3:Normal | 4-5:Interpolation";
-> = 1.0;
+> = 4.0;
 
 uniform float iscanb <
 	ui_type = "drag";
@@ -2193,7 +2193,7 @@ float4 LinearizePS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	}
 	float3 c=c1;
 	float intera=1.0;
-	float gamma_in=clamp(gamma_i,1.0,5.0);
+	float gamma_in=gamma_i;
 	float m1=max(max(c1.r,c1.g),c1.b);
 	float m2=max(max(c2.r,c2.g),c2.b);
 	float3 df=abs(c1-c2);
