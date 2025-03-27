@@ -1449,11 +1449,11 @@ float humbars(float pos)
 float corner(float2 pos)
 {
 	pos=abs(2.0*(pos-0.5));
-	float2 aspect= float2(1.0,OptSize.x/OptSize.y)*0.05;
+	float2 aspect= float2(1.0,OptSize.x/OptSize.y);
 	float bc= bsize*0.05 + 0.0005; pos.y = pos.y + bc*(aspect.y - 1.0);
 	float2 crn = max(csize.xx,2.0*bc+0.0015);
 	float2 cp = max(pos-(1.0-crn*aspect),0.0)/aspect; float cd = sqrt(dot(cp,cp));
-	pos=max(pos,crn);
+	pos=max(pos,1.0-crn+cd);
 	float rs=lerp(1.0, 0.0, smoothstep(1.0-bc, 1.0, sqrt(max(pos.x,pos.y))));
 	return pow(rs, sborder);
 }
