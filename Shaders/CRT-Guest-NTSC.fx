@@ -16,6 +16,7 @@
 	write to the Free Software Foundation, Inc, 59 Temple Place - STE 330, Boston, MA 02111-1307, USA.
 
 	Ported to ReShade by DevilSingh with some help from guest(r)
+	Unofficial update by Jobima1st to crt-guest-advanced-2025-02-28-release1 and Changed shadowMask from (0 to 14) to (-1 to 13) to match RetroArch
 
 */
 
@@ -925,11 +926,11 @@ uniform float overscany <
 
 uniform float shadow_msk <
 	ui_type = "drag";
-	ui_min = 0.0;
-	ui_max = 14.0;
+	ui_min = -1.0;
+	ui_max = 13.0;
 	ui_step = 1.0;
 	ui_label = "CRT Mask: 1:CGWG | 2-5:Lottes | 6-14:Trinitron";
-> = 1.0;
+> = 0.0;
 
 uniform float maskstr <
 	ui_type = "drag";
@@ -1467,6 +1468,11 @@ float get_luma(float3 c)
 float smothstep (float e0, float e1, float x)
 {
 	return clamp((x - e0) / (e1 - e0), 0.0, 1.0);
+}
+
+float shadow_msk(float shadow_msk)
+{
+shadow_msk = shadow_msk + 1;
 }
 
 float3 crt_mask(float2 pos,float mx,float mb)
