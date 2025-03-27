@@ -795,6 +795,14 @@ uniform float scangamma <
 	ui_label = "Scanlines Gamma";
 > = 2.4;
 
+uniform float rolling_scan <
+	ui_type = "drag";
+	ui_min = -1.0;
+	ui_max = 1.0;
+	ui_step = 0.01;
+	ui_label = "Rolling Scanlines";
+> = 0.0;
+
 uniform float no_scanlines <
 	ui_type = "drag";
 	ui_min = 0.0;
@@ -1391,11 +1399,6 @@ float mod(float x,float y)
 float st0(float x)
 {
 	return exp2(-10.0*x*x);
-}
-
-float st1(float x)
-{
-	return exp2(- 8.0*x*x);
 }
 
 float3 sw0(float x,float color,float scanline,float3 c)
@@ -2434,22 +2437,26 @@ float4 NTSC_TV2_PS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	if( hscans){color2=color1;scolor2=scolor1;}
 	if(!interb||hscans)
 	{
-	float3 luma=float3(0.2126,0.7152,0.0722);
-	float ssub=ssharp*max(abs(scolor1.x-scolor2.x),abs(dot(color1,luma)-dot(color2,luma)));
-	float shape1=lerp(scanline1,scanline2+ssub*scolor1.x*35.0,    f);
-	float shape2=lerp(scanline1,scanline2+ssub*scolor2.x*35.0,1.0-f);
+	float shape1=lerp(scanline1,scanline2,    f);
+	float shape2=lerp(scanline1,scanline2,1.0-f);
 	float wt1=st0(     f);
 	float wt2=st0(1.0- f);
 	float3  color0= color1*wt1+ color2*wt2;
 	float3 scolor0=scolor1*wt1+scolor2*wt2;
 	ctmp=color0/(wt1+wt2);
 	float3 sctmp=scolor0/(wt1+wt2);
+	if (abs(rolling_scan) > 0.005) 
+	{ 
+		color1 = ctmp; color2 = ctmp;
+		scolor1 = sctmp; scolor2 = sctmp;
+	}
 	float3 w1,w2;
 	float3 cref1=lerp(sctmp,scolor1,beam_size);float creff1=pow(max(max(cref1.r,cref1.g),cref1.b),scan_falloff);
 	float3 cref2=lerp(sctmp,scolor2,beam_size);float creff2=pow(max(max(cref2.r,cref2.g),cref2.b),scan_falloff);
 	if(tds>0.5){shape1=lerp(scanline2,shape1,creff1);shape2=lerp(scanline2,shape2,creff2);}
-	float f1=     f;
-	float f2=1.0- f;
+	float scanpix = OrgSize.y/OptSize.y;
+	float f1=fract(f - rolling_scan*float(FrameCount)*scanpix);
+	float f2=1.0- f1;
 	float m1=max(max(color1.r,color1.g),color1.b)+eps;
 	float m2=max(max(color2.r,color2.g),color2.b)+eps;
 	cref1=color1/m1;
