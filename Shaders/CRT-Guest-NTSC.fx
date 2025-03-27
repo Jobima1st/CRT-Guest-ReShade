@@ -525,7 +525,7 @@ uniform float m_glow_mask <
 
 uniform float FINE_GAUSS <
 	ui_type = "drag";
-	ui_min = 1.0;
+	ui_min = -1.0;
 	ui_max = 5.0;
 	ui_step = 1.0;
 	ui_label = "Fine (Magic) Glow Sampling";
@@ -2246,9 +2246,11 @@ float4 HGaussianPS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	return float4(color,1.0);
 }
 
+float FINE_GLOW = (params.FINE_GAUSS > 0.5) ? params.FINE_GAUSS : mix(0.75, 0.5, -params.FINE_GAUSS);
+
 float4 VGaussianPS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Target
 {
-	float4 GaussSize=float4(SrcSize.x,OrgSize.y,SrcSize.z,OrgSize.w)*lerp(1.0.xxxx,float4(FINE_GAUSS,FINE_GAUSS,1.0/FINE_GAUSS,1.0/FINE_GAUSS),min(FINE_GAUSS-1.0,1.0));
+	float4 GaussSize=float4(SrcSize.x,OrgSize.y,SrcSize.z,OrgSize.w)*,float4(FINE_GAUSS,FINE_GAUSS,1.0/FINE_GAUSS,1.0/FINE_GAUSS));
 	float f=frac(GaussSize.y*texcoord.y);
 	f=0.5-f;
 	float2 tex=floor(GaussSize.xy*texcoord)*GaussSize.zw+0.5*GaussSize.zw;
