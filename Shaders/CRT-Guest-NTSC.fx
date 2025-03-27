@@ -2205,13 +2205,13 @@ float4 LinearizePS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	if(interr<=OrgSize.y/yres_div&&interm>0.5&&intres!=1.0&&intres!=0.5||hscans)
 	{
 	intera=0.25;
-	float liine_no=clamp(floor( mod(OrgSize.y*fuxcoord.y,2.0)),0.0,1.0);
-	float frame_no=clamp(floor( mod(float(framecount),2.0)),0.0,1.0);
+	float liine_no=floor( mod(OrgSize.y*fuxcoord.y,2.0));
+	float frame_no=floor( mod(float(framecount),2.0));
 	float ii=abs(liine_no-frame_no);
 	if(interm< 3.5)
 	{
 	c2=plant(lerp(c2,c2*c2,iscans),max(max(c2.r,c2.g),c2.b));
-	r=clamp(max(m1*ii,(1.0-iscanb)*min(m1,m2)),0.0,1.0);
+	r=max(m1*ii,(1.0-iscanb)*min(m1,m2));
 	c=plant(lerp(lerp(c1,c2,min(lerp(m1,1.0-m2,min(m1,1.0-m1))/(d+0.00001),1.0)),c1,ii),r);
 	if(interm==3.0)c=(1.0-0.5*iscanb)*lerp(c2,c1,ii);
 	}
