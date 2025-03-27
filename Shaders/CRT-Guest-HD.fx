@@ -1844,7 +1844,7 @@ float4 HD_Pass1_PS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	{
 	pixel=COMPAT_TEXTURE(CRTHD_S3,tex+n*dx).rgb;
 	w=crthd_h(n+f)-sharp;
-	fpx=abs(n+f-sign(n)*FPR)/FPR;
+	fpx=(abs(n+f)-FPR)*FPRi;
 	if(w<0.0)w=max(w,lerp(-maxsharp,0.0,pow(clamp(fpx,0.0,1.0),HSHARP)));
 	else
 	{
