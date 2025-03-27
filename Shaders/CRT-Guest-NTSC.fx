@@ -78,7 +78,7 @@ uniform float ntsc_taps <
 
 uniform float ntsc_cscale1 <
 	ui_type = "drag";
-	ui_min = 1.0;
+	ui_min = 0.5;
 	ui_max = 4.00;
 	ui_step = 0.05;
 	ui_label = "NTSC Chroma Scaling/Bleeding (2 Phase)";
@@ -1652,11 +1652,11 @@ float humbars(float pos)
 float corner(float2 pos)
 {
 	pos=abs(2.0*(pos-0.5));
-	float2 aspect= float2(1.0,OptSize.x/OptSize.y)*0.05;
+	float2 aspect= float2(1.0,OptSize.x/OptSize.y);
 	float bc= bsize*0.05 + 0.0005; pos.y = pos.y + bc*(aspect.y - 1.0);
 	float2 crn = max(csize.xx,2.0*bc+0.0015);
 	float2 cp = max(pos-(1.0-crn*aspect),0.0)/aspect; float cd = sqrt(dot(cp,cp));
-	pos=max(pos,crn);
+	pos=max(pos, 1.0-crn+cd);
 	float rs=lerp(1.0, 0.0, smoothstep(1.0-bc, 1.0, sqrt(max(pos.x,pos.y))));
 	return pow(rs, sborder);
 }
@@ -1886,7 +1886,7 @@ float4 Signal_1_PS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	float c2 = get_luma(tex2D(NTSC_S02, texcoord + dx).rgb);
 	if(ntsc_phase==4.0)
 	{
-	float mix3=min(5.0*abs(c1.x-c2.x),1.0);
+	float mix3=min(5.0*abs(c1-c2),1.0);
 	c1=pow(c1,ntsc_gamma);
 	c2=pow(c2,ntsc_gamma);
 	yiq1.x=lerp(min(0.5*(yiq1.x+max(c1,c2)),max(yiq1.x,min(c1,c2))),yiq1.x,mix3);
@@ -1978,11 +1978,13 @@ float4 Signal_2_PS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	{
 	float loop=max(ntsc_taps,8.0);
 	if (ntsc_charp > 0.25) loop = min(loop, 14.0);
-	float mit = 1.0 + 0.0375*pow(smothstep(16.0, 8.0, loop), 0.5);
-	float2 dx=float2(one.x*mit,0.0);
-	float2 xd=dx;int loopstart=int(TAPS_2_phase-loop);float taps=0.0;
+	int loopstart=int(TAPS_2_phase-loop);
 	float laps=ntsc_taps+1.0;
 	float ssub=loop-loop/ntsc_cscale1;
+	float taps=0.0;
+	float mit = 1.0 + 0.0375*pow(smothstep(16.0, 8.0, loop), 0.5);
+	float2 dx=float2(one.x*mit,0.0); float2 xd=dx;
+
 	for(i=loopstart;i<32;i++)
 	{
 	offset=float(i-loopstart);
@@ -1998,9 +2000,10 @@ float4 Signal_2_PS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	signal+=tex2D(NTSC_S03,tex_1).xyz*tmps;
 	signal =signal/wsum;
 	}else{
-	float loop=min(ntsc_taps,TAPS_3_phase); one.y=one.y/ntsc_cscale2;
+	one.y=one.y/ntsc_cscale2;
 	float3 dx=float3(one.x,one.y,0.0);
 	float mit = 1.0;
+	float loop=min(ntsc_taps,TAPS_3_phase); 
 	if (ntsc_phase == 4.0) { loop = max(ntsc_taps, 8.0); mit = 1.0 + 0.0375*pow(smothstep(16.0, 8.0, loop), 0.5); }
 	float3 dx1 = dx; dx.x*=mit;
 	float3 xd=dx;int loopstart=int(24.0-loop);
@@ -2036,7 +2039,7 @@ float4 Signal_2_PS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 float4 Signal_3_PS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Target
 {
 	float2 dx=float2(0.25*OrgSize.z/4.0,0.0);
-	float2 xx=float2(0.5*OrgSize.z,0.0);
+	float2 xx=float2(0.50*OrgSize.z,0.0);
 	float2 tcoord0 = (floor(OrgSize.xy * tex_2) + 0.5)*OrgSize.zw;
 	float tcoordx = OrgSize.x * (tex_2.x+dx.x) - 0.5;   
 	float fpx = frac(tcoordx);
@@ -2084,8 +2087,8 @@ float4 Signal_3_PS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 
 	float dif=max(max(ll3.x,ll3.y),max(ll3.z,abs(ll1.x*ll1.x-ll2.x*ll2.x)));
 	float dff=pow(dif, 0.125);
-	float lc=smoothstep(0.20, 0.10, abs(lum2-lum1))*dff;
-	float tmp=smoothstep(0.05-0.03*lc,0.425-0.375*lc,dif);
+	float lc=smothstep(0.20, 0.10, abs(lum2-lum1))*dff;
+	float tmp=smothstep(0.05-0.03*lc,0.425-0.375*lc,dif);
 	float tmp1 = pow((tmp+0.1)/1.1, 0.25);
 	float sweight = lerp(tmp, tmp1, line0);
 	float sweighr = lerp(tmp, tmp1, line2);
@@ -2406,7 +2409,7 @@ float4 NTSC_TV2_PS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	PALSize*=float4(2.0,1.0,0.5,1.0);
 	float SourceY=PALSize.y;
 	float sy=1.0;
-	if( intres==1.0)sy=max(floor(SourceY/199.0),1.0);
+	if( intres==1.0)sy=max(round(SourceY/224.0),1.0);
 	if( intres>0.25&&intres!=1.0)sy=intres;
 	PALSize*=float4(1.0,1.0/sy,1.0,sy);
 	float2 lexcoord = fuxcoord.xy;
