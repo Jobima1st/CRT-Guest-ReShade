@@ -565,7 +565,7 @@ uniform float SIGMA_V <
 
 uniform float FINE_BLOOM <
 	ui_type = "drag";
-	ui_min = 1.0;
+	ui_min = -1.0;
 	ui_max = 5.0;
 	ui_step = 1.0;
 	ui_label = "Fine Bloom/Halation Sampling";
@@ -2272,9 +2272,11 @@ float4 VGaussianPS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	return float4(color,1.0);
 }
 
+float FINE_BLOOM = (params.FINE_BLOOM > 0.5) ? params.FINE_BLOOM : mix(0.75, 0.5, -params.FINE_BLOOM);
+
 float4 BloomHorzPS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Target
 {
-	float4 BloomSize=float4(OrgSize.x,OrgSize.y,OrgSize.z,OrgSize.w)*lerp(1.0.xxxx,float4(FINE_BLOOM,FINE_BLOOM,1.0/FINE_BLOOM,1.0/FINE_BLOOM),min(FINE_BLOOM-1.0,1.0));
+	float4 BloomSize=float4(OrgSize.x,OrgSize.y,OrgSize.z,OrgSize.w)*float4(FINE_BLOOM,FINE_BLOOM,1.0/FINE_BLOOM,1.0/FINE_BLOOM);
 	float f=frac(BloomSize.x*texcoord.x);
 	f=0.5-f;
 	float2 tex=floor(BloomSize.xy*texcoord)*BloomSize.zw+0.5*BloomSize.zw;
