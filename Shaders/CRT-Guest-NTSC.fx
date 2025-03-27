@@ -1107,7 +1107,7 @@ uniform float maskmid <
 	ui_label = "Mitigate Mask on Mid-Colors";
 > = 0.0;
 
-uniform float maskmid <
+uniform float edgemask <
 	ui_type = "drag";
 	ui_min = 0.0;
 	ui_max = 1.0;
@@ -1670,7 +1670,7 @@ float igc(float mc)
 float3 gc2(float3 c, float w3)
 {
 	float mc = max(max(c.r,c.g),c.b);
-	float gp = 1.0/(1.0 + (gamma_c2 - 1.0)*mix(0.375, 1.0, w3));
+	float gp = 1.0/(1.0 + (gamma_c2 - 1.0)*lerp(0.375, 1.0, w3));
 	float mg = pow(mc, gp);
 	return c * mg/(mc + eps);  
 }
@@ -1870,14 +1870,14 @@ float4 Signal_1_PS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	if(ntsc_fields== 2.0) MERGE=0.0;else
 	if(ntsc_fields== 3.0) MERGE=1.0;
 	float2 pix_no=texcoord*OrgSize.xy*pix_res* float2(4.0,1.0);
-	float mit = params.ntsc_taps; if (params.ntsc_charp > 0.25 && phase == 2.0) mit = clamp(mit, 8.0, min(params.ntsc_taps,14.0));
+	float mit = ntsc_taps; if (ntsc_charp > 0.25 && phase == 2.0) mit = clamp(mit, 8.0, min(ntsc_taps,14.0));
 	mit = smothstep(16.0, 8.0, mit) * 0.325;
 	float3 col0=tex2D(NTSC_S02, texcoord).rgb;
 	float3 yiq1=rgb2yiq(col0);
 	yiq1.x=pow(yiq1.x,ntsc_gamma); float lum=yiq1.x;
 	float2 dx = float2(OrgSize.z, 0.0);
-	float c1 = get_luma(texture(Source, vTexCoord - dx).rgb);
-	float c2 = get_luma(texture(Source, vTexCoord + dx).rgb);
+	float c1 = get_luma(tex2D(NTSC_S02, texcoord - dx).rgb);
+	float c2 = get_luma(tex2D(NTSC_S02, texcoord + dx).rgb);
 	if(ntsc_phase==4.0)
 	{
 	float mix3=min(5.0*abs(c1.x-c2.x),1.0);
@@ -1888,7 +1888,7 @@ float4 Signal_1_PS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	float3 yiq2=yiq1;
 	float3 yiqs=yiq1;
 	float3 yiqz=yiq1;
-	float3 tmp =  yiq;
+	float3 tmp =  yiq1;
 	if(MERGE>0.5)
 	{
 	float chroma_phase2=(phase<2.5)?pii*(mod(pix_no.y,2.0)+mod(framecount+1.0,2.0)):0.6667*pii*(mod(pix_no.y,3.0)+mod(framecount+1.0,2.0));
@@ -2024,16 +2024,16 @@ float4 Signal_2_PS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	}
 
 	float orig = get_luma(tex2D(NTSC_S02, tex_1).rgb);
-	return float4(signal,x);
+	return float4(signal,orig);
 }
 
 float4 Signal_3_PS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Target
 {
 	float2 dx=float2(0.25*OrgSize.z/4.0,0.0);
 	float2 xx=float2(0.5*OrgSize.z,0.0);
-	float2 texcoord0 = (floor(OrgSize.xy * vTexCoord) + 0.5)*OrgSize.zw;
-	float texcoordx = OrgSize.x * (tex_2.x+dx.x) - 0.5;   
-	float fpx = fract(tcoordx);
+	float2 tcoord0 = (floor(OrgSize.xy * tex_2) + 0.5)*OrgSize.zw;
+	float tcoordx = OrgSize.x * (tex_2.x+dx.x) - 0.5;   
+	float fpx = frac(tcoordx);
 	tcoordx = (floor(tcoordx ) + 0.5) * OrgSize.z;
 	float2 tcoord=tex_2+dx;
 	float3 ll1=tex2D(NTSC_S04,tcoord+     xx).xyz;
@@ -2046,37 +2046,37 @@ float4 Signal_3_PS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	float phase = (ntsc_phase < 1.5) ? ((OrgSize.x > 300.0) ? 2.0 : 3.0) : ((ntsc_phase > 2.5) ? 3.0 : 2.0);
 	if (ntsc_phase == 4.0) phase = 3.0;
 
-	float ca = tex2D(NTSC_S02, texcoord0 - xx - xx).a;
-	float c0 = tex2D(NTSC_S02, texcoord0 - xx).a;
-	float c1 = tex2D(NTSC_S02, texcoord0     ).a;
-	float c2 = tex2D(NTSC_S02, texcoord0 + xx).a;
-	float cb = tex2D(NTSC_S02, texcoord0 + xx + xx).a;
+	float ca = tex2D(NTSC_S02, tcoord0 - xx - xx).a;
+	float c0 = tex2D(NTSC_S02, tcoord0 - xx).a;
+	float c1 = tex2D(NTSC_S02, tcoord0     ).a;
+	float c2 = tex2D(NTSC_S02, tcoord0 + xx).a;
+	float cb = tex2D(NTSC_S02, tcoord0 + xx + xx).a;
 
 	float th = (phase < 2.5) ? 0.025 : 0.0075;
 	float line0  = smothstep(th, 0.0, min(abs(c1-c0),abs(c2-c1)));
 	float line1  = max(smothstep(th, 0.0, min(abs(ca-c0),abs(c2-cb))), line0);
 	float line2  = max(smothstep(th, 0.0, min(abs(ca-c2),abs(c0-cb))), line1);
    
-	if (params.ntsc_rainbow1 > 0.5 && phase < 2.5)
+	if (ntsc_rainbow > 0.5 && phase < 2.5)
 	{
 		float ybool = 1.0; bool ybool1 = (c0 == c1 && c1 == c2);
-		if ((params.ntsc_rainbow1 < 1.5) && bool(line0)) ybool = 0.0; else
-		if ((params.ntsc_rainbow1 < 2.5) && bool(line2)) ybool = 0.0; else 
+		if ((ntsc_rainbow < 1.5) && bool(line0)) ybool = 0.0; else
+		if ((ntsc_rainbow < 2.5) && bool(line2)) ybool = 0.0; else 
 		if (ybool1) ybool = 0.0;
-		float line_no  = floor(mod(params.OriginalSize.y*vTexCoord.y, 2.0));
-		float frame_no = floor(mod(float(params.FrameCount),2.0));
+		float line_no  = floor(mod(OrgSize.y*tex_2.y, 2.0));
+		float frame_no = floor(mod(float(framecount),2.0));
 		float ii = abs(line_no-frame_no);
-		dy = ii * params.OriginalSize.w*ybool;
+		dy = ii * OrgSize.w*ybool;
 	}
 	float3 ref=tex2D(NTSC_S04,tcoord).xyz;
 	float2 orig = ref.yz;
-	ref.yz = tex2D(Source, tcoord + float2(0.0, dy)).yz;
+	ref.yz = tex2D(NTSC_S04, tcoord + float2(0.0, dy)).yz;
 	float lum1=min(tex2D(NTSC_S02,tex_2-dx).a, tex2D(NTSC_S02,tex_2+dx).a);
 	float lum2=ref.x;
 
 	float3 ll3 = abs(ll1-ll2);
 
-	float dif=max(max(ll3.x-ll3.y),max(ll3.z,abs(ll1.x*ll1.x-ll2.x*ll2.x)));
+	float dif=max(max(ll3.x,ll3.y),max(ll3.z,abs(ll1.x*ll1.x-ll2.x*ll2.x)));
 	float dff=pow(dif, 0.125);
 	float lc=smoothstep(0.20, 0.10, abs(lum2-lum1))*dff;
 	float tmp=smoothstep(0.05-0.03*lc,0.425-0.375*lc,dif);
@@ -2084,11 +2084,11 @@ float4 Signal_3_PS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	float sweight = lerp(tmp, tmp1, line0);
 	float sweighr = lerp(tmp, tmp1, line2);
 	float3 signal=ref;
-	float ntsc_sharp = abs(params.ntsc_sharp);
+	float ntsc_shrp = abs(ntsc_shrp);
 	if(ntsc_shrp>0.25)
 	{
 	float mixer = sweight;
-	if (params.ntsc_sharp > 0.25) mixer = sweighr; mixer*=0.1*ntsc_sharp;
+	if (ntsc_shrp > 0.25) mixer = sweighr; mixer*=0.1*ntsc_shrp;
 	float lummix = lerp(lum2, lum1, mixer);
 	float lm1=lerp(lum2*lum2 ,lum1*lum1 ,mixer);lm1=sqrt(lm1);
 	float lm2=lerp(sqrt(lum2),sqrt(lum1),mixer);lm2=lm2* lm2 ;
@@ -2097,21 +2097,21 @@ float4 Signal_3_PS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	signal.x=min((k2*lm1 + k1*lm2)/(k1+k2), 1.0);
 	signal.x=min(signal.x,max(ntsc_shpe*signal.x,lum2));
 	}
-	if ((params.ntsc_charp + params.ntsc_charp3) > 0.25)
+	if ((ntsc_charp + ntsc_charp3) > 0.25)
 		{
 		float mixer = sweight;
-		if (params.ntsc_sharp > 0.25) mixer = sweighr;
-		mixer = lerp(smothstep(0.075,0.125,max(l3.y,l3.z)), smothstep(0.015,0.0275,dif), line2)*mixer; 
-		mixer*=0.1*((phase < 2.5) ? params.ntsc_charp : params.ntsc_charp3);
+		if (ntsc_shrp > 0.25) mixer = sweighr;
+		mixer = lerp(smothstep(0.075,0.125,max(ll3.y,ll3.z)), smothstep(0.015,0.0275,dif), line2)*mixer; 
+		mixer*=0.1*((phase < 2.5) ? ntsc_charp : ntsc_charp3);
 		tcoord = float2(tcoordx,tcoord.y);
-		float3 orig_ch = rgb2yiq(mix(tex2D(NTSC_S02, tcoord).rgb , tex2D(NTSC_S02, tcoord+xx).rgb, clamp(1.5*fpx-0.25,0.0,1.0)));
+		float3 orig_ch = rgb2yiq(lerp(tex2D(NTSC_S02, tcoord).rgb , tex2D(NTSC_S02, tcoord+xx).rgb, clamp(1.5*fpx-0.25,0.0,1.0)));
 		signal.yz = lerp(signal.yz, orig_ch.yz, mixer);
 		}
-	if (params.ntsc_rainbow1 == 2.0 && phase < 2.5)
+	if (ntsc_rainbow == 2.0 && phase < 2.5)
 	{
 		signal.yz = lerp(signal.yz, orig, sweighr);
 	}
-	signal.x = pow(signal.x, 1.0/params.ntsc_gamma);
+	signal.x = pow(signal.x, 1.0/ntsc_gamma);
 	signal = clamp(yiq2rgb(signal), 0.0, 1.0);
 	return float4(signal,1.0);
 }
@@ -2220,7 +2220,10 @@ float4 LinearizePS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	return float4(c,gamma_in);
 }
 
-float FINE_GLOW = (params.FINE_GAUSS > 0.5) ? params.FINE_GAUSS : lerp(0.75, 0.5, -params.FINE_GAUSS);
+float FINE_GAUSS(float FINE_GAUSS)
+{
+(FINE_GAUSS > 0.5) ? FINE_GAUSS : lerp(0.75, 0.5, -FINE_GAUSS);
+}
 
 float4 HGaussianPS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Target
 {
@@ -2253,7 +2256,7 @@ float4 HGaussianPS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 
 float4 VGaussianPS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Target
 {
-	float4 GaussSize=float4(SrcSize.x,OrgSize.y,SrcSize.z,OrgSize.w)*,float4(FINE_GAUSS,FINE_GAUSS,1.0/FINE_GAUSS,1.0/FINE_GAUSS));
+	float4 GaussSize=float4(SrcSize.x,OrgSize.y,SrcSize.z,OrgSize.w)*float4(FINE_GAUSS,FINE_GAUSS,1.0/FINE_GAUSS,1.0/FINE_GAUSS);
 	float f=frac(GaussSize.y*texcoord.y);
 	f=0.5-f;
 	float2 tex=floor(GaussSize.xy*texcoord)*GaussSize.zw+0.5*GaussSize.zw;
@@ -2275,7 +2278,10 @@ float4 VGaussianPS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	return float4(color,1.0);
 }
 
-float FINE_BLOOM = (params.FINE_BLOOM > 0.5) ? params.FINE_BLOOM : lerp(0.75, 0.5, -params.FINE_BLOOM);
+float FINE_BLOOM(float FINE_BLOOM)
+{
+(FINE_BLOOM > 0.5) ? FINE_BLOOM : lerp(0.75, 0.5, -FINE_BLOOM);
+}
 
 float4 BloomHorzPS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Target
 {
@@ -2361,8 +2367,7 @@ float4 NTSC_TV1_PS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	{
 	pixel=COMPAT_TEXTURE(NTSC_S08,tex+n*dx).rgb;
 	w=crthd_h(n+f,xs)-sharp;
-	fpx=(abs(n+f)-FPR)*FPRi);
-	if(abs(n)<=CLPSIZE){cmax=max(cmax,pixel); cmin=min(cmin,pixel);}
+	fpx=(abs(n+f)-FPR)*FPRi;
 	if(w<0.0)w=max(w,lerp(-maxsharp,0.0,pow(clamp(fpx,0.0,1.0),HSHARP)));
 	else
 	{
@@ -2455,7 +2460,7 @@ float4 NTSC_TV2_PS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	float3 cref2=lerp(sctmp,scolor2,beam_size);float creff2=pow(max(max(cref2.r,cref2.g),cref2.b),scan_falloff);
 	if(tds>0.5){shape1=lerp(scanline2,shape1,creff1);shape2=lerp(scanline2,shape2,creff2);}
 	float scanpix = OrgSize.y/OptSize.y;
-	float f1=fract(f - rolling_scan*float(FrameCount)*scanpix);
+	float f1=frac(f - rolling_scan*float(framecount)*scanpix);
 	float f2=1.0- f1;
 	float m1=max(max(color1.r,color1.g),color1.b)+eps;
 	float m2=max(max(color2.r,color2.g),color2.b)+eps;
@@ -2616,7 +2621,7 @@ float4 ChromaticPS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	float mbl=max(max(Bloom.r,Bloom.g),Bloom.b);
 	float mxh=0.5*(colmx+colmx*colmx);
 	mbl = lerp(lerp(mxh,lerp(mxh,mbl,mbl),colmx), mbl, mb);
-	Bloom=plant(Bloom, lerp(sqrt(mbl*mxh), max((mbl - 0.15*(1.0-colmx)), 0.4*mxh), pow(colmx, 0.25))) * mix(0.425, 1.0, colmx);
+	Bloom=plant(Bloom, lerp(sqrt(mbl*mxh), max((mbl - 0.15*(1.0-colmx)), 0.4*mxh), pow(colmx, 0.25))) * lerp(0.425, 1.0, colmx);
 	Bloom=(3.0 - colmx - color)*plant(0.325+orig1/w3, 0.5*(1.0+w3))*hcmask*Bloom;
 	color=pow(pow(color,mask_gamma/gamma_in)+halation*pow(Bloom,mask_gamma/gamma_in),gamma_in/mask_gamma);
 	}else
@@ -2632,9 +2637,9 @@ float4 ChromaticPS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 
 	if(smoothmask>0.125)
 	{
-	w4 = pow(w3, 0.425 + 0.3*smoothmask);
-	w4 = max(w4 - 0.175*colmx*smoothmask, 0.2)
-	color=mix(min(color/w4, plant(orig1,1.0 + 0.175*colmx*smoothmask))*w4, color, w4);
+	float w4 = pow(w3, 0.425 + 0.3*smoothmask);
+	w4 = max(w4 - 0.175*colmx*smoothmask, 0.2);
+	color=lerp(min(color/w4, plant(orig1,1.0 + 0.175*colmx*smoothmask))*w4, color, w4);
 	}
 
 	if(m_glow<0.5)Glow=lerp(Glow,0.25*color,colmx);else
@@ -2657,10 +2662,10 @@ float4 ChromaticPS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	color=min(color,1.0);
 
 	if (edgemask > 0.05) {
-		mx0 = COMPAT_TEXTURE(Source, pos1 - dx).a; mx0 = COMPAT_TEXTURE(Source, pos1 - dx*(1.0-0.75*sqrt(mx0))).a; 
-		mx2 = COMPAT_TEXTURE(Source, pos1 + dx).a; mx2 = COMPAT_TEXTURE(Source, pos1 + dx*(1.0-0.75*sqrt(mx2))).a; 
-		float mx3 = COMPAT_TEXTURE(Source, pos1 - 4.0*dx).a;
-		float mx4 = COMPAT_TEXTURE(Source, pos1 + 4.0*dx).a;
+		mx0 = COMPAT_TEXTURE(NTSC_S14, pos1 - dx).a; mx0 = COMPAT_TEXTURE(NTSC_S14, pos1 - dx*(1.0-0.75*sqrt(mx0))).a; 
+		mx2 = COMPAT_TEXTURE(NTSC_S14, pos1 + dx).a; mx2 = COMPAT_TEXTURE(NTSC_S14, pos1 + dx*(1.0-0.75*sqrt(mx2))).a; 
+		float mx3 = COMPAT_TEXTURE(NTSC_S14, pos1 - 4.0*dx).a;
+		float mx4 = COMPAT_TEXTURE(NTSC_S14, pos1 + 4.0*dx).a;
 		mx4 = max(pow(abs(mx3-mx4),0.55-0.40*cx),min(max(mx3,mx4)/min(0.1+cx,1.0),1.0));
 		mb = (1.0 - abs(pow(mx0,1.0-0.65*mx2)-pow(mx2,1.0-0.65*mx0)));
 		mb = mx4*edgemask*(1.0001-mb*mb);
