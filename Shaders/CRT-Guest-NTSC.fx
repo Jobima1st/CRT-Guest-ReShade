@@ -1898,7 +1898,7 @@ float4 Signal_1_PS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	if(MERGE>0.5)
 	{
 	float chroma_phase2=(phase<2.5)?pii*(mod(pix_no.y,2.0)+mod(framecount+1.0,2.0)):0.6667*pii*(mod(pix_no.y,3.0)+mod(framecount+1.0,2.0));
-	float mod_phase2=chroma_phase2+pix_no.x*CHROMA_MOD_FREQ;
+	float mod_phase2=chroma_phase2+pix_no.x*CHROMA_MOD_FREQ*res;
 	float i_mod2=cos(mod_phase2);
 	float q_mod2=sin(mod_phase2);
 	yiq2.yz*=float2(i_mod2,q_mod2);
@@ -1979,20 +1979,19 @@ float4 Signal_2_PS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	float loop=max(ntsc_taps,8.0);
 	if (ntsc_charp > 0.25) loop = min(loop, 14.0);
 	int loopstart=int(TAPS_2_phase-loop);
-	float laps=ntsc_taps+1.0;
+	float laps=loop+1.0;
 	float ssub=loop-loop/ntsc_cscale1;
 	float taps=0.0;
 	float mit = 1.0 + 0.0375*pow(smothstep(16.0, 8.0, loop), 0.5);
-	float2 dx=float2(one.x*mit,0.0); float2 xd=dx;
+	float2 dx=float2(one.x*mit,0.0); float2 dx1=dx;
 
 	for(i=loopstart;i<32;i++)
 	{
-	offset=float(i-loopstart);
-	j=offset+1.0; xd=(offset-loop)*dx;
-	sums=fetch_offset1(xd);
-	taps=max(j-ssub,0.0);
+	offset=float(i-loopstart); j=offset+1.0; dx1=(offset-loop)*dx;
+	sums=fetch_offset1(dx1); taps=max(j-ssub,0.0);
 	tmps=float3(luma_filter_2_phase[i],taps.xx);
-	wsum=wsum+tmps; signal+=sums*tmps;
+	wsum=wsum+tmps;
+	signal+=sums*tmps;
 	}
 	taps=laps-ssub;
 	tmps=float3(luma_filter_2_phase[TAPS_2_phase],taps.xx);
@@ -2006,14 +2005,14 @@ float4 Signal_2_PS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	float loop=min(ntsc_taps,TAPS_3_phase); 
 	if (ntsc_phase == 4.0) { loop = max(ntsc_taps, 8.0); mit = 1.0 + 0.0375*pow(smothstep(16.0, 8.0, loop), 0.5); }
 	float3 dx1 = dx; dx.x*=mit;
-	float3 xd=dx;int loopstart=int(24.0-loop);
+	int loopstart=int(24.0-loop);
 	for(i=loopstart;i<24;i++)
 	{
-	offset=float(i-loopstart);
-	j=offset+1.0;xd.xy=(offset-loop)*dx.xy;
-	sums=fetch_offset2(xd);
+	offset=float(i-loopstart);j=offset+1.0;dx1.xy=(offset-loop)*dx.xy;
+	sums=fetch_offset2(dx1);
 	tmps=float3(luma_filter_3_phase[i], chroma_filter_3_phase[i].xx);
-	wsum=wsum+tmps; signal+=sums*tmps;
+	wsum=wsum+tmps;
+	signal+=sums*tmps;
 	}
 	tmps=float3(luma_filter_3_phase[TAPS_3_phase],chroma_filter_3_phase[TAPS_3_phase],chroma_filter_3_phase[TAPS_3_phase]);
 	wsum=wsum+wsum+tmps;
@@ -2055,11 +2054,11 @@ float4 Signal_3_PS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	float phase = (ntsc_phase < 1.5) ? ((OrgSize.x > 300.0) ? 2.0 : 3.0) : ((ntsc_phase > 2.5) ? 3.0 : 2.0);
 	if (ntsc_phase == 4.0) phase = 3.0;
 
-	float ca = tex2D(NTSC_S02, tcoord0 - xx - xx).a;
-	float c0 = tex2D(NTSC_S02, tcoord0 - xx).a;
-	float c1 = tex2D(NTSC_S02, tcoord0     ).a;
-	float c2 = tex2D(NTSC_S02, tcoord0 + xx).a;
-	float cb = tex2D(NTSC_S02, tcoord0 + xx + xx).a;
+	float ca = tex2D(NTSC_S03, tcoord0 - xx - xx).a;
+	float c0 = tex2D(NTSC_S03, tcoord0 - xx).a;
+	float c1 = tex2D(NTSC_S03, tcoord0     ).a;
+	float c2 = tex2D(NTSC_S03, tcoord0 + xx).a;
+	float cb = tex2D(NTSC_S03, tcoord0 + xx + xx).a;
 
 	float th = (phase < 2.5) ? 0.025 : 0.0075;
 	float line0  = smothstep(th, 0.0, min(abs(c1-c0),abs(c2-c1)));
@@ -2080,7 +2079,7 @@ float4 Signal_3_PS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	float3 ref=tex2D(NTSC_S04,tcoord).xyz;
 	float2 orig = ref.yz;
 	ref.yz = tex2D(NTSC_S04, tcoord + float2(0.0, dy)).yz;
-	float lum1=min(tex2D(NTSC_S02,tex_2-dx).a, tex2D(NTSC_S02,tex_2+dx).a);
+	float lum1=min(tex2D(NTSC_S03,tex_2-dx).a, tex2D(NTSC_S03,tex_2+dx).a);
 	float lum2=ref.x;
 
 	float3 ll3 = abs(ll1-ll2);
