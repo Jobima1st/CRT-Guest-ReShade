@@ -753,7 +753,7 @@ uniform float maskstr <
 	ui_min = -0.5;
 	ui_max = 1.0;
 	ui_step = 0.025;
-	ui_label = "Mask Strength (1, 6-14)";
+	ui_label = "Mask Strength (0, 5-13)";
 > = 0.3;
 
 uniform float mcut <
