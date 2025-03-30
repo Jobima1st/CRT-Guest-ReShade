@@ -2586,7 +2586,7 @@ float4 ChromaticPS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	}
 	swidth=round(swidth*mscale);
 	smask=slt_mask(scoord+float2(sm_offset,0.0),mx,swidth);
-	smask=clamp(smask+lerp(smask_mit,0.0,min(w3,pow(w3*max(max(orig1.r,orig1.g),orig1.b),0.33333))),0.0,1.0);
+	smask=clamp(smask+lerp(smask_mit,0.0,w3*pow(colmx,0.3)),0.0,1.0);
 	emask =cmask;
 	cmask*=smask;
 	dmask =cmask;
