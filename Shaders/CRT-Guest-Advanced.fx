@@ -564,14 +564,6 @@ uniform float spike <
 	ui_label = "Scanlines Spike Removal";
 > = 1.0;
 
-uniform float ssharp <
-	ui_type = "drag";
-	ui_min = 0.0;
-	ui_max = 0.3;
-	ui_step = 0.01;
-	ui_label = "Smart Sharpen Scanlines";
-> = 0.0;
-
 uniform float scangamma <
 	ui_type = "drag";
 	ui_min = 0.5;
