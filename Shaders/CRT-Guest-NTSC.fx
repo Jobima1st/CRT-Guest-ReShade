@@ -196,6 +196,14 @@ uniform float DEBLUR <
 	ui_label = "FSharpen - Deblur Strength";
 > = 1.0;
 
+uniform float DEDGE <
+	ui_type = "drag";
+	ui_min = 0.7;
+	ui_max = 1.00;
+	ui_step = 0.01;
+	ui_label = "FSharpen - Deblur Edge Faloff";
+> = 0.85;
+
 uniform float PR <
 	ui_type = "drag";
 	ui_min = 0.0;
@@ -2126,22 +2134,32 @@ float4 SharpnessPS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	contrast=lerp(2.0*CCONTR,CCONTR,contrast);
 	float3 mn=min(min(c01,c21),c11);float3 mn1=min(mn,c11*(1.0-contrast));
 	float3 mx=max(max(c01,c21),c11);float3 mx1=max(mx,c11*(1.0+contrast));
-	float3 dif=pow(mx1-mn1+0.0001,0.75);
+	float3 dif=pow(mx1-mn1+0.00001,0.75);
 	float3 sharpen=lerp(CSHARPEN*CDETAILS,CSHARPEN,dif);
 	float3 res=clamp(lerp(c11,b11,-sharpen),mn1,mx1);
+
 	if(DEBLUR>1.125)
 	{
+	float2 tex0=(floor(OrgSize.xy*texcoord)+0.5)*OrgSize.zw;
 	c01=tex2D(NTSC_S02,texcoord+2.0*g01).rgb;
 	c21=tex2D(NTSC_S02,texcoord+2.0*g21).rgb;
-	c11=tex2D(NTSC_S02,texcoord        ).rgb;
-	mn1=sqrt(min(min(c01,c21),c11)*mn);
-	mx1=sqrt(max(max(c01,c21),c11)*mx);
+	c11=tex2D(NTSC_S02,tex0            ).rgb;
+
+	b11 = min(min(c01,c21), c11);
+	c11 = max(max(c01,c21), c11);
+
+	mn1 = lerp(b11, mn, mn);
+	mx1 = lerp(mx, c11, mx);
+
 	float3 dif1=max(res-mn1,0.0)+0.00001;dif1=pow(dif1,DEBLUR.xxx);
 	float3 dif2=max(mx1-res,0.0)+0.00001;dif2=pow(dif2,DEBLUR.xxx);
 	float3 ratio=dif1/(dif1+dif2);
-	sharpen=min(lerp(mn1,mx1,ratio),pow(res,lerp(0.75.xxx,1.10.xxx,res)));
+	sharpen=lerp(mn1,mx1,ratio);
+
+	sharpen = min(sharpen, max(DEDGE*sharpen, res));
+
 	res=rgb2yiq(res);
-	res.x=dot(sharpen,float3(0.2989,0.5870,0.1140));
+	res.x=dot(sharpen,float3(0.299,0.587,0.114));
 	res=max(yiq2rgb(res),0.0);
 	}
 	return float4(res,1.0);
