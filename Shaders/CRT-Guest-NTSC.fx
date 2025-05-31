@@ -201,7 +201,7 @@ uniform float DEDGE <
 	ui_min = 0.7;
 	ui_max = 1.00;
 	ui_step = 0.01;
-	ui_label = "FSharpen - Deblur Edge Faloff";
+	ui_label = "FSharpen - Deblur Edge Falloff";
 > = 0.85;
 
 uniform float PR <
