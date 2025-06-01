@@ -177,7 +177,7 @@ uniform float CCONTR <
 	ui_min = 0.0;
 	ui_max = 0.25;
 	ui_step = 0.01;
-	ui_label = "FSharpen - Sharpen Contrast/Ringing";
+	ui_label = "FSharpen - Sharpen(+Deb) Contrast";
 > = 0.05;
 
 uniform float CDETAILS <
@@ -203,6 +203,14 @@ uniform float DEDGE <
 	ui_step = 0.01;
 	ui_label = "FSharpen - Deblur Edge Falloff";
 > = 0.85;
+
+uniform float DESHARP <
+	ui_type = "drag";
+	ui_min = 0.0;
+	ui_max = 4.00;
+	ui_step = 0.20;
+	ui_label = "FSharpen - Deblur Extra Sharpen";
+> = 0.00;
 
 uniform float PR <
 	ui_type = "drag";
@@ -2148,8 +2156,8 @@ float4 SharpnessPS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	b11 = min(min(c01,c21), c11);
 	c11 = max(max(c01,c21), c11);
 
-	mn1 = lerp(b11, mn, mn);
-	mx1 = lerp(mx, c11, mx);
+	mn1 = min(lerp(b11, mn, mn),mn);
+	mx1 = max(lerp(mx, c11, mx),mx);
 
 	float3 dif1=max(res-mn1,0.0)+0.00001;dif1=pow(dif1,DEBLUR.xxx);
 	float3 dif2=max(mx1-res,0.0)+0.00001;dif2=pow(dif2,DEBLUR.xxx);
@@ -2157,10 +2165,12 @@ float4 SharpnessPS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	sharpen=lerp(mn1,mx1,ratio);
 
 	sharpen = min(sharpen, max(DEDGE*sharpen, res));
-
+	b11 = res;
 	res=rgb2yiq(res);
 	res.x=dot(sharpen,float3(0.299,0.587,0.114));
 	res=max(yiq2rgb(res),0.0);
+
+	res = clamp((1.0+DESHARP)*res - DESHARP*b11,mn1*(1.0-contrast),mx1*(1.0+contrast));
 	}
 	return float4(res,1.0);
 }
