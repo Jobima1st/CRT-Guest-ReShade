@@ -202,7 +202,7 @@ uniform float DEDGE <
 	ui_max = 1.00;
 	ui_step = 0.01;
 	ui_label = "FSharpen - Deblur Edge Falloff";
-> = 0.85;
+> = 0.89;
 
 uniform float DESHARP <
 	ui_type = "drag";
@@ -1463,6 +1463,11 @@ float3 rgb2yiq(float3 r)
 	return mul(rgb_m, r);
 }
 
+float get_lumad(float3 c)
+{
+	return dot(c, float3(0.299, 0.587, 0.114));
+}
+
 float3 yiq2rgb(float3 y)
 {
 	return mul(yiq_m, y);
@@ -2149,28 +2154,34 @@ float4 SharpnessPS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	if(DEBLUR>1.125)
 	{
 	float2 tex0=(floor(OrgSize.xy*texcoord)+0.5)*OrgSize.zw;
-	c01=tex2D(NTSC_S02,texcoord+2.0*g01).rgb;
-	c21=tex2D(NTSC_S02,texcoord+2.0*g21).rgb;
-	c11=tex2D(NTSC_S02,tex0            ).rgb;
 
-	b11 = min(min(c01,c21), c11);
-	c11 = max(max(c01,c21), c11);
+	float l01=get_lumad(tex2D(NTSC_S02,texcoord+2.0*g01).rgb);
+	float l21=get_lumad(tex2D(NTSC_S02,texcoord+2.0*g21).rgb);
+	float l11=get_lumad(tex2D(NTSC_S02,tex0            ).rgb);
 
-	mn1 = min(lerp(b11, mn, mn),mn);
-	mx1 = max(lerp(mx, c11, mx),mx);
+	float v11 = min(min(l01,l21), l11);
+	      l11 = max(max(l01,l21), l11);
 
-	float3 dif1=max(res-mn1,0.0)+0.00001;dif1=pow(dif1,DEBLUR.xxx);
-	float3 dif2=max(mx1-res,0.0)+0.00001;dif2=pow(dif2,DEBLUR.xxx);
-	float3 ratio=dif1/(dif1+dif2);
-	sharpen=lerp(mn1,mx1,ratio);
+	float lmin = get_lumad(mn);
+	float lmax = get_lumad(mx);
 
-	sharpen = min(sharpen, max(DEDGE*sharpen, res));
-	b11 = res;
+	float ln1 = min(lerp(v11, lmin, lmin),lmin);
+	float lx1 = max(lerp(lmax, l11, lmax),lmax);
+	float r11 = get_lumad(res);
+
+	float dif1=max(r11-ln1,0.0)+0.00001;dif1=pow(dif1,DEBLUR);
+	float dif2=max(lx1-r11,0.0)+0.00001;dif2=pow(dif2,DEBLUR);
+
+	float ratio=dif1/(dif1+dif2);
+	float lsharpen=lerp(ln1, lx1,ratio);
+
+	lsharpen = min(lsharpen, max(DEDGE*lsharpen, r11));
+
 	res=rgb2yiq(res);
-	res.x=dot(sharpen,float3(0.299,0.587,0.114));
+	v11 = res.x;
+	res.x = lsharpen;
+	res.x = clamp((1.0+DESHARP)*res.x - DESHARP*v11, ln1*(1.0-contrast),lx1*(1.0+contrast));
 	res=max(yiq2rgb(res),0.0);
-
-	res = clamp((1.0+DESHARP)*res - DESHARP*b11,mn1*(1.0-contrast),mx1*(1.0+contrast));
 	}
 	return float4(res,1.0);
 }
