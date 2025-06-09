@@ -202,7 +202,7 @@ uniform float DEDGE <
 	ui_max = 1.00;
 	ui_step = 0.01;
 	ui_label = "FSharpen - Deblur Edge Falloff";
-> = 0.85;
+> = 0.87;
 
 uniform float PR <
 	ui_type = "drag";
