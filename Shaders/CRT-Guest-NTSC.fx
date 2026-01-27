@@ -22,12 +22,20 @@
 
 */
 
-uniform float internal_res <
+uniform float filter_res <
 	ui_type = "drag";
 	ui_min = 0.5;
 	ui_max = 8.0;
 	ui_step = 0.1;
-	ui_label = "Internal Resolution";
+	ui_label = "Horizontal Filtering Resolution";
+> = 1.0;
+
+uniform float speedup <
+	ui_type = "drag";
+	ui_min = 1.0;
+	ui_max = 4.0;
+	ui_step = 1.0;
+	ui_label = "Speedup w. higher Internal Res.";
 > = 1.0;
 
 uniform float cust_artifacting <
@@ -57,9 +65,9 @@ uniform float ntsc_fields <
 uniform float ntsc_phase <
 	ui_type = "drag";
 	ui_min = 1.0;
-	ui_max = 4.0;
+	ui_max = 5.0;
 	ui_step = 1.0;
-	ui_label = "NTSC Phase: Auto | 2 Phase | 3 Phase | Mixed";
+	ui_label = "NTSC Phase: Auto | 2 Phase | 3 Phase | Mixed | PCE";
 > = 1.0;
 
 uniform float ntsc_scale <
@@ -70,10 +78,18 @@ uniform float ntsc_scale <
 	ui_label = "NTSC Resolution Scaling";
 > = 1.0;
 
+uniform float nscale <
+	ui_type = "drag";
+	ui_min = 0.2;
+	ui_max = 2.5;
+	ui_step = 0.025;
+	ui_label = "NTSC Filter Scaling";
+> = 1.0;
+
 uniform float ntsc_taps <
 	ui_type = "drag";
 	ui_min = 6.0;
-	ui_max = 32.0;
+	ui_max = 48.0;
 	ui_step = 1.0;
 	ui_label = "NTSC # of Taps (Filter Width)";
 > = 32.0;
@@ -118,6 +134,30 @@ uniform float ntsc_gamma <
 	ui_label = "NTSC Filtering Gamma Correction";
 > = 1.0;
 
+uniform float RFNOISE <
+	ui_type = "drag";
+	ui_min = 0.0;
+	ui_max = 1.0;
+	ui_step = 0.01;
+	ui_label = "NTSC RF Noise Frequency";
+> = 0.30;
+
+uniform float RFNOISE1 <
+	ui_type = "drag";
+	ui_min = 0.0;
+	ui_max = 0.7;
+	ui_step = 0.01;
+	ui_label = "NTSC RF Noise Luma+";
+> = 0.0;
+
+uniform float RFNOISE2 <
+	ui_type = "drag";
+	ui_min = 0.0;
+	ui_max = 0.7;
+	ui_step = 0.01;
+	ui_label = "NTSC RF Noise Chroma+";
+> = 0.0;
+
 uniform float ntsc_rainbow <
 	ui_type = "drag";
 	ui_min = 0.0;
@@ -141,6 +181,14 @@ uniform float ntsc_shrp <
 	ui_step = 0.5;
 	ui_label = "NTSC Sharpness (Adaptive)";
 > = 0.0;
+
+uniform float ntsc_fonts <
+	ui_type = "drag";
+	ui_min = 0.25;
+	ui_max = 1.0;
+	ui_step = 0.01;
+	ui_label = "NTSC Sharpness - Preserve Fonts (0.35 is a Good Spot)";
+> = 0.25;
 
 uniform float ntsc_shpe <
 	ui_type = "drag";
@@ -190,13 +238,21 @@ uniform float CDETAILS <
 	ui_label = "FSharpen - Sharpen Details";
 > = 1.0;
 
-uniform float DEBLUR <
+uniform float NDEBLUR <
 	ui_type = "drag";
 	ui_min = 1.0;
-	ui_max = 7.0;
+	ui_max = 8.0;
 	ui_step = 0.25;
 	ui_label = "FSharpen - Deblur Strength";
 > = 1.0;
+
+uniform float DSMART <
+	ui_type = "drag";
+	ui_min = 0.0;
+	ui_max = 1.0;
+	ui_step = 1.0;
+	ui_label = "FSharpen - Smart 'Dithering' Deblur";
+> = 0.0;
 
 uniform float DREDGE <
 	ui_type = "drag";
@@ -213,6 +269,15 @@ uniform float DSHARP <
 	ui_step = 0.2;
 	ui_label = "FSharpen - Deblur Extra Sharpen";
 > = 0.0;
+
+
+uniform float bth <
+	ui_type = "drag";
+	ui_min = 1.0;
+	ui_max = 125.0;
+	ui_step = 1.0;
+	ui_label = "Afterglow Effect Threshold";
+> = 4.0;
 
 uniform float PR <
 	ui_type = "drag";
@@ -257,9 +322,9 @@ uniform float ST <
 uniform float CS <
 	ui_type = "drag";
 	ui_min = 0.0;
-	ui_max = 4.0;
+	ui_max = 5.0;
 	ui_step = 1.0;
-	ui_label = "Display Gamut: sRGB | Modern | DCI | Adobe | Rec. 2020";
+	ui_label = "Display Gamut: sRGB | Modern | DCI | Adobe | Rec. 2020 | P3";
 > = 0.0;
 
 uniform float CP <
@@ -275,7 +340,7 @@ uniform float TNTC <
 	ui_min = 0.0;
 	ui_max = 4.0;
 	ui_step = 1.0;
-	ui_label = "LUT Colors: Trinitron 1 | Trinitron 2 | Nec MultiSync | NTSC";
+	ui_label = "LUT Colors: NTSC-J | Trinitron | Nec MultiSync | NTSC 1953";
 > = 0.0;
 
 uniform float LUTLOW <
@@ -326,6 +391,14 @@ uniform float contra <
 	ui_label = "Contrast Adjustment";
 > = 0.0;
 
+uniform float pre_gc <
+	ui_type = "drag";
+	ui_min = 0.5;
+	ui_max = 1.75;
+	ui_step = 0.025;
+	ui_label = "Gamma Correct Adjustment";
+> = 1.0;
+
 uniform float sega_fix <
 	ui_type = "drag";
 	ui_min = 0.0;
@@ -366,6 +439,14 @@ uniform float lsmooth <
 	ui_label = "Raster Bloom Effect Smoothing";
 > = 0.7;
 
+uniform float lsdev <
+	ui_type = "drag";
+	ui_min = -0.25;
+	ui_max = 0.25;
+	ui_step = 0.01;
+	ui_label = "Raster Bloom Smoothing Bright Deviation";
+> = 0.0;
+
 uniform float gamma_i <
 	ui_type = "drag";
 	ui_min = 1.0;
@@ -393,9 +474,9 @@ uniform float interr <
 uniform float interm <
 	ui_type = "drag";
 	ui_min = 0.0;
-	ui_max = 5.0;
+	ui_max = 6.0;
 	ui_step = 1.0;
-	ui_label = "Interlace Mode: 0:OFF | 1-3:Normal | 4-5:Interpolation";
+	ui_label = "Interlace Mode: 0:OFF | 1-3,6:Normal | 4-5:Interpolation";
 > = 4.0;
 
 uniform float iscanb <
@@ -676,7 +757,7 @@ uniform float h_mask <
 	ui_max = 1.0;
 	ui_step = 0.025;
 	ui_label = "Halation Mask Strength";
-> = 0.5;
+> = 0.35;
 
 uniform float gamma_c <
 	ui_type = "drag";
@@ -934,6 +1015,14 @@ uniform float overscany <
 	ui_label = "Overscan Y Original Pixels";
 > = 0.0;
 
+uniform float VShift <
+	ui_type = "drag";
+	ui_min = -200.0;
+	ui_max = 200.0;
+	ui_step = 1.0;
+	ui_label = "Vertical shift Y original pixels";
+> = 0.0;
+
 uniform float shadow_msk <
 	ui_type = "drag";
 	ui_min = 0.0;
@@ -1107,16 +1196,8 @@ uniform float pr_scan <
 	ui_min = 0.0;
 	ui_max = 1.0;
 	ui_step = 0.025;
-	ui_label = "Preserve Scanlines Strength";
+	ui_label = "Preserve Scanlines Properties";
 > = 0.1;
-
-uniform float maskmid <
-	ui_type = "drag";
-	ui_min = 0.0;
-	ui_max = 1.0;
-	ui_step = 0.05;
-	ui_label = "Mitigate Mask on Mid-Colors";
-> = 0.0;
 
 uniform float edgemask <
 	ui_type = "drag";
@@ -1230,21 +1311,30 @@ uniform float post_br <
 	ui_label = "Post Brightness";
 > = 1.0;
 
+uniform float oimage <
+	ui_type = "drag";
+	ui_min = 0.0;
+	ui_max = 1.0;
+	ui_step = 0.25;
+	ui_label = "Show Original Image";
+> = 0.0;
+
 #include "ReShade.fxh"
 
 #define TexSize float2(Resolution_X,Resolution_Y)
 #define IptSize float2(800.00000000,600.00000000)
+#define BoxSize float2(AspectSize_X,AspectSize_Y)
 #define OptSize float4(BUFFER_SCREEN_SIZE,1.0/BUFFER_SCREEN_SIZE)
 #define OrgSize float4(TexSize,1.0/TexSize)
 #define SrcSize float4(IptSize,1.0/IptSize)
+#define NewSize float4(BoxSize,1.0/BoxSize)
 #define fuxcoord (texcoord*1.00001)
 #define scans 1.5*scans
 #define eps 1e-8
 #define pii 3.14159265
-#define fracoord (fuxcoord*OptSize.xy)
+#define fracoord (fuxcoord*NewSize.xy)
 #define texCD(c,d) tex2Dlod(c,float4(d,0,0))
 #define LumSize float4(2.0*TexSize.x,1.0*TexSize.y,1.0/(2.0*TexSize.x),1.0/(1.0*TexSize.y))
-#define mix_m float3x3(BRIGHTNESS,ARTIFACT,ARTIFACT,FRINGING,2.0*SATURATION,0.0,FRINGING,0.0,2.0*SATURATION)
 #define rgb_m float3x3(0.299,0.587,0.114,0.596,-0.274,-0.322,0.211,-0.523,0.312)
 #define yiq_m float3x3(1.000,0.956,0.621,1.000,-0.272,-0.647,1.000,-1.106,1.703)
 #define fetch_offset1(dx)  texCD(NTSC_S03,tex_c+dx).xyz+texCD(NTSC_S03,tex_c-dx).xyz
@@ -1258,13 +1348,27 @@ uniform float post_br <
 #define Resolution_Y 240
 #endif
 
+#ifndef AspectSize_X
+#define AspectSize_X BUFFER_SCREEN_SIZE.x
+#endif
+
+#ifndef AspectSize_Y
+#define AspectSize_Y BUFFER_SCREEN_SIZE.y
+#endif
+
 #define NTSC_S00 ReShade::BackBuffer
+
+texture NTSC_T0S{Width=1.0*Resolution_X;Height=Resolution_Y;Format=RGBA16F;};
+sampler NTSC_S0S{Texture=NTSC_T0S;AddressU=BORDER;AddressV=BORDER;AddressW=BORDER;MagFilter=POINT ;MinFilter=POINT ;MipFilter=POINT ;};
 
 texture NTSC_T01{Width=1.0*Resolution_X;Height=Resolution_Y ;Format=RGBA16F;};
 sampler NTSC_S01{Texture=NTSC_T01;AddressU=BORDER;AddressV=BORDER;AddressW=BORDER;MagFilter=POINT ;MinFilter=POINT ;MipFilter=POINT ;};
 
 texture NTSC_T02{Width=1.0*Resolution_X;Height=Resolution_Y ;Format=RGBA16F;};
 sampler NTSC_S02{Texture=NTSC_T02;AddressU=BORDER;AddressV=BORDER;AddressW=BORDER;MagFilter=POINT ;MinFilter=POINT ;MipFilter=POINT ;};
+
+texture NTSC_T0I{Width=1.0*Resolution_X;Height=Resolution_Y ;Format=RGBA16F;};
+sampler NTSC_S0I{Texture=NTSC_T0I;AddressU=BORDER;AddressV=BORDER;AddressW=BORDER;MagFilter=LINEAR;MinFilter=LINEAR;MipFilter=LINEAR;};
 
 texture NTSC_T03{Width=4.0*Resolution_X;Height=Resolution_Y ;Format=RGBA16F;};
 sampler NTSC_S03{Texture=NTSC_T03;AddressU=BORDER;AddressV=BORDER;AddressW=BORDER;MagFilter=LINEAR;MinFilter=LINEAR;MipFilter=LINEAR;};
@@ -1302,6 +1406,9 @@ sampler NTSC_S13{Texture=NTSC_T13;AddressU=BORDER;AddressV=BORDER;AddressW=BORDE
 texture NTSC_T14{Width=1.0*BUFFER_WIDTH;Height=BUFFER_HEIGHT;Format=RGBA16F;};
 sampler NTSC_S14{Texture=NTSC_T14;AddressU=BORDER;AddressV=BORDER;AddressW=BORDER;MagFilter=LINEAR;MinFilter=LINEAR;MipFilter=LINEAR;};
 
+texture NTSC_T15{Width=1.0*AspectSize_X;Height=AspectSize_Y;Format=RGBA16F;};
+sampler NTSC_S15{Texture=NTSC_T15;AddressU=BORDER;AddressV=BORDER;AddressW=BORDER;MagFilter=LINEAR;MinFilter=LINEAR;MipFilter=LINEAR;};
+
 texture NTSC_001<source="CRT-LUT-1.png";>{Width=1024;Height=32;};
 sampler NTSC_L01{Texture=NTSC_001;};
 
@@ -1338,6 +1445,13 @@ float vignette(float2 pos)
 float contrast(float x)
 {
 	return max(lerp(x,smoothstep(0,1.0,x),contra),0.0);
+}
+
+float3 pgc(float3 c)
+{
+	float mc = max(max(c.r,c.g),c.b);
+	float mg = pow(mc, 1.0/pre_gc);
+	return c * mg/(mc + 1e-8);  
 }
 
 float dist(float3 A,float3 B)
@@ -1394,8 +1508,7 @@ float bloom_v(float x)
 
 float crthd_h(float x,float y)
 {
-	float sigma=1.0/(2.0*LIGMA_H*LIGMA_H*y*y*internal_res*internal_res);
-	return exp(-x*x*sigma);
+	return exp(-x*x*y);
 }
 
 float mod(float x,float y)
@@ -1607,6 +1720,7 @@ float3 crt_mask(float2 pos,float mx,float mb)
 	mask.b=1.0;
 	mask=clamp(lerp(lerp(one,mask,mcut),lerp(one,mask,maskstr),mx),0.0,1.0);
 	}else
+	if(shadow_msk==14.0)
 	{
 	mask=0.0;
 	pos.x=floor(mod(pos.x,6.0));
@@ -1615,6 +1729,16 @@ float3 crt_mask(float2 pos,float mx,float mb)
 	if(pos.x<2.5)mask.rg =1.0.xx ;else
 	if(pos.x<3.5)mask.rgb=1.0.xxx;else
 	if(pos.x<4.5)mask.gb =1.0.xx ;else
+	mask.b=1.0;
+	mask=clamp(lerp(lerp(one,mask,mcut),lerp(one,mask,maskstr),mx),0.0,1.0);
+	}else
+	{
+	mask=0.0;
+	pos.x=floor(mod(pos.x,5.0));
+	if(pos.x<0.5)mask    =0.0.xxx;else
+	if(pos.x<1.5)mask.r  =1.0    ;else
+	if(pos.x<2.5)mask.rg =1.0.xx ;else
+	if(pos.x<3.5)mask.gb =1.0.xx ;else
 	mask.b=1.0;
 	mask=clamp(lerp(lerp(one,mask,mcut),lerp(one,mask,maskstr),mx),0.0,1.0);
 	}
@@ -1653,7 +1777,7 @@ float humbars(float pos)
 float corner(float2 pos)
 {
 	pos=abs(2.0*(pos-0.50));
-	float2 aspect=float2(1.0,OptSize.x/OptSize.y);
+	float2 aspect=float2(1.0,NewSize.x/NewSize.y);
 	float b=bsize*0.05+0.0005;pos.y=pos.y+b*(aspect.y-1.0);
 	float2 crn=max(csize.xx,2.0*b+0.0015);
 	float2 crp=max(pos-(1.0-crn*aspect),0.0)/aspect;float cd=sqrt(dot(crp,crp));
@@ -1694,10 +1818,38 @@ float3 noise(float3 v)
 	return v;
 }
 
+float smothstep (float e0, float e1, float x)
+{
+   return clamp((x - e0) / (e1 - e0), 0.0, 1.0);
+}
+
+float2 psrnd(float2 TexCoord, float FrameCount) {
+    float3 p = float3(TexCoord * 16758.5453, FrameCount);
+    float x = frac(sin(dot(p, float3(12.9898, 78.233, 3.183))) * 43758.5453);
+    float y = frac(sin(dot(p, float3(25.9796, 14.113, 11.271))) * 96321.9124);
+    return float2(x, y);
+}
+
+float3 NoiseNP3(float2 TexCoord, float FrameCount) {
+float RFNOISE0 = RFNOISE*RFNOISE + 0.00001;
+    TexCoord = psrnd(TexCoord, FrameCount);
+    float3 p = float3(TexCoord * 758.5453, FrameCount);
+    float res1 = frac(sin(dot(p, float3(12.989835, 78.23341, 0.16453))) * 43758.54531);
+    float res2 = frac(sin(dot(p, float3(39.34679, 11.13523, 83.15573))) * 39459.32423);
+    float res3 = frac(sin(dot(p, float3(73.15691, 52.23504, 9.15197))) * 60493.84731);
+    float lns = float(abs(res1-0.5) < 0.2*RFNOISE0);
+    float cny = float(abs(res2-0.5) < 0.5*RFNOISE0);
+    float cnz = float(abs(res3-0.5) < 0.5*RFNOISE0);
+    lns = lns*smothstep(0.5-0.2*RFNOISE0, 0.5+0.2*RFNOISE0, res1) * 0.66 - 0.33*lns;
+    cny = cny*smothstep(0.5-0.5*RFNOISE0, 0.5+0.5*RFNOISE0, res2)  - 0.5*cny;
+    cnz = cnz*smothstep(0.5-0.5*RFNOISE0, 0.5+0.5*RFNOISE0, res3)  - 0.5*cnz;	
+    return float3(lns, cny, cnz);
+}
+
 void bring_pixel(inout float3 c,inout float3 b,inout float3 g,float2 coord,float2 boord)
 {
-	float stepx=OptSize.z;
-	float stepy=OptSize.w;
+	float stepx=NewSize.z;
+	float stepy=NewSize.w;
 	float2 dx=float2(stepx,0.0);
 	float2 dy=float2(0.0,stepy);
 	float posx= 2.0*coord.x-1.0;
@@ -1733,19 +1885,51 @@ void bring_pixel(inout float3 c,inout float3 b,inout float3 g,float2 coord,float
 	g=lerp(g,d,min(ds,1.0));
 }
 
+static const float2 expanse=BoxSize/ (2*OptSize.xy);
+static const float2 capital=0.0/OptSize.xy+0.5;
+static const float coord_w=capital.x-expanse.x;
+static const float coord_e=capital.x+expanse.x;
+static const float coord_n=capital.y-expanse.y;
+static const float coord_s=capital.y+expanse.y;
+static const float2 correct=float2(coord_w,coord_n);
+
+void CropProcessVS(in uint id:SV_VertexID,out float4 position:SV_Position,out float2 texcoord:TEXCOORD)
+{
+	#if __RENDERER__ <= 0x09300
+	texcoord.x=(id==1||id==3)?coord_e:coord_w;
+	texcoord.y=(id>1)?coord_s:coord_n;
+	position.x=(id==1||id==3)? 1:-1;
+	position.y=(id>1)?-1: 1;
+	position.zw=1;
+	#else
+	texcoord.x=(id&1)?coord_e:coord_w;
+	texcoord.y=(id&2)?coord_s:coord_n;
+	position.x=(id&1)? 1:-1;
+	position.y=(id&2)?-1: 1;
+	position.zw=1;
+	#endif
+}
+
+float4 StockPassPS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Target
+{
+	return texCD(NTSC_S00,texcoord);
+}
+
 float4 AfterglowPS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Target
 {
 	float2 dx=float2(OrgSize.z,0.0);
 	float2 dy=float2(0.0,OrgSize.w);
 	float w=1.0;
-	float3 color0=texCD(NTSC_S00,texcoord   ).rgb;
-	float3 color1=texCD(NTSC_S00,texcoord-dx).rgb;
-	float3 color2=texCD(NTSC_S00,texcoord+dx).rgb;
-	float3 color3=texCD(NTSC_S00,texcoord-dy).rgb;
-	float3 color4=texCD(NTSC_S00,texcoord+dy).rgb;
+	float3 color0=texCD(NTSC_S0S,texcoord   ).rgb;
+	float3 color1=texCD(NTSC_S0S,texcoord-dx).rgb;
+	float3 color2=texCD(NTSC_S0S,texcoord+dx).rgb;
+	float3 color3=texCD(NTSC_S0S,texcoord-dy).rgb;
+	float3 color4=texCD(NTSC_S0S,texcoord+dy).rgb;
 	float3 cr=(2.5*color0+color1+color2+color3+color4)/6.5;
 	float3 a=texCD(NTSC_S01,texcoord).rgb;
-	if((color0.r+color0.g+color0.b<5.0/255.0)){w=0.0;}
+	float b = bth/255.0;
+	float c = max(max(color0.r,color0.g),color0.b);
+	w = smoothstep(b, 2.0*b, c);
 	float3 result=lerp(max(lerp(cr,a,0.49+float3(PR,PG,PB))-1.25/255.0,0.0),cr,w);
 	return float4(result,w);
 }
@@ -1760,12 +1944,13 @@ float4 PreShaderPS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	const float3x3 File5=float3x3(0.377923, 0.195679,0.010514, 0.317366,0.722319, 0.097826, 0.207738,0.082002,1.076960);
 	const float3x3 ToRGB=float3x3(3.240970,-0.969244,0.055630,-1.537383,1.875968,-0.203977,-0.498611,0.041555,1.056972);
 	const float3x3 ToMDN=float3x3(2.791723,-0.894766,0.041678,-1.173165,1.815586,-0.130886,-0.440973,0.032000,1.002034);
-	const float3x3 ToDCI=float3x3(2.493497,-0.829489,0.035846,-0.931384,1.762664,-0.076172,-0.402711,0.023625,0.956885);
+	const float3x3 ToDCI=float3x3(2.973422,-0.867605,0.045031,-1.110433,1.843757,-0.095697,-0.480247,0.024743,1.201215);
 	const float3x3 ToADB=float3x3(2.041588,-0.969244,0.013444,-0.565007,1.875968,-0.118360,-0.344731,0.041555,1.015175);
 	const float3x3 ToREC=float3x3(1.716651,-0.666684,0.017640,-0.355671,1.616481,-0.042771,-0.253366,0.015769,0.942103);
+	const float3x3 ToP3=float3x3(2.493509,-0.829473,0.0358512,-0.931388,1.762630,-0.0761839,-0.402712,0.023624,0.9570296);
 	const float3x3 D65_to_D55=float3x3(0.4850339153,0.2500956126,0.0227359648,0.3488957224,0.6977914447,0.1162985741,0.1302823568,0.0521129427,0.6861537456);
 	const float3x3 D65_to_D93=float3x3(0.3412754080,0.1759701322,0.0159972847,0.3646170520,0.7292341040,0.1215390173,0.2369894093,0.0947957637,1.2481442225);
-	float4 imgColor=texCD(NTSC_S00,texcoord);
+	float4 imgColor=texCD(NTSC_S0S,texcoord);
 	float4 aftrglow=texCD(NTSC_S01,texcoord);
 	float w=1.0-aftrglow.w;
 	float l=length(aftrglow.rgb);
@@ -1821,6 +2006,7 @@ float4 PreShaderPS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	if(CS==2.0){p=2.6;m_o=ToDCI;}else
 	if(CS==3.0){p=2.2;m_o=ToADB;}else
 	if(CS==4.0){p=2.4;m_o=ToREC;}
+	if(CS==5.0){p=2.2;m_o=ToP3; }
 	color=pow(c,p);
 	float3x3 m_i;
 	if(CP==0.0){m_i=File0;}else
@@ -1850,6 +2036,7 @@ float4 PreShaderPS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	float3 comp=(WP<0.0)?cooler:warmer;
 	color=lerp(color,comp,m);
 	color=pow(max(color,0.0),1.0/p);
+	color=pgc(color);
 	if(BP>-0.5)color=color+aftrglow.rgb+bp;else
 	{
 	color=max(color+BP/255.0,0.0)/(1.0+BP/255.0*step(-BP/255.0,max(max(color.r,color.g),color.b)))+aftrglow.rgb;
@@ -1860,11 +2047,12 @@ float4 PreShaderPS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 
 float4 Signal_1_PS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Target
 {
+	float2 vtexcoord=texcoord*float2(speedup, 1.0);
 	float pix_res= min(ntsc_scale,1.0);
 	float phase= (ntsc_phase<1.5)?((OrgSize.x>300.0)? 2.0:3.0):((ntsc_phase>2.5)?3.0:2.0);
-	if(ntsc_phase==4.0)phase=3.0;
+	if(ntsc_phase==4.0)phase=3.0; else if (ntsc_phase == 5.0) phase = 2.0;
 	float res=ntsc_scale;
-	float CHROMA_MOD_FREQ=(phase<2.5)?(4.0*pii/15.0):(pii/3.0);
+	float CHROMA_MOD_FREQ=(phase == 2.0 && ntsc_phase != 5.0) ? (4.0 * pii / 15.0) : ((OrgSize <= 300.0 || phase == 3.0) ? (pii / 3.0) : (pii/2.0));
 	float ARTIFACT=cust_artifacting;
 	float FRINGING=cust_fringing;
 	float BRIGHTNESS=ntsc_brt;
@@ -1873,24 +2061,27 @@ float4 Signal_1_PS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	if(ntsc_fields== 1.0&&phase==3.0) MERGE=1.0;else
 	if(ntsc_fields== 2.0) MERGE=0.0;else
 	if(ntsc_fields== 3.0) MERGE=1.0;
-	float2 pix_no=texcoord*OrgSize.xy*pix_res* float2(4.0,1.0);
-	float3 col0=texCD(NTSC_S02, texcoord).rgb;
+	float3x3 mix_m = float3x3(BRIGHTNESS,ARTIFACT,ARTIFACT,FRINGING,2.0*SATURATION,0.0,FRINGING,0.0,2.0*SATURATION);
+	float2 pix_no=vtexcoord*OrgSize.xy*pix_res* float2(4.0,1.0);
+	if (vtexcoord.x > 1.0) return 0.0.xxxx; else
+	{
+	float3 col0=texCD(NTSC_S0I, vtexcoord).rgb;
 	float3 yiq1=rgb2yiq(col0);
 	yiq1.x=pow(yiq1.x,ntsc_gamma); float lum=yiq1.x;
-	float2 dx=float2(OrgSize.z,0.0);
-	float c1=get_luma(texCD(NTSC_S02,texcoord-dx).rgb);
-	float c2=get_luma(texCD(NTSC_S02,texcoord+dx).rgb);
 	if(ntsc_phase==4.0)
 	{
+	float2 dx=float2(OrgSize.z,0.0);
+	float c1=get_luma(texCD(NTSC_S0I,vtexcoord-dx).rgb);
+	float c2=get_luma(texCD(NTSC_S0I,vtexcoord+dx).rgb);
 	float miix=min(5.0*abs(c1-c2),1.0);
 	c1=pow(c1,ntsc_gamma);
 	c2=pow(c2,ntsc_gamma);
 	yiq1.x=lerp(min(0.5*(yiq1.x+max(c1,c2)),max(yiq1.x,min(c1,c2))),yiq1.x,miix);
 	}
+	float3 temp=yiq1;
 	float3 yiq2=yiq1;
 	float3 yiqs=yiq1;
 	float3 yiqz=yiq1;
-	float3 temp=yiq1;
 	float mit=ntsc_taps;if(ntsc_charp1>0.25&&phase==2.0)mit=clamp(mit,8.0,min(ntsc_taps,14.0));
 	mit=swoothstep(16.0,8.0,mit)*0.325;
 	if(MERGE>0.5)
@@ -1931,6 +2122,7 @@ float4 Signal_1_PS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	if(ntsc_phase==4.0){yiq1.x=lum;yiq2.x=lum;}
 	if(MERGE>0.5){if(ntsc_rainbow<0.5||phase>2.5)yiq1=0.5*(yiq1+yiq2); else yiq1.x=0.5*(yiq1.x+yiq2.x);}
 	return float4(yiq1,lum);
+	}
 }
 
 float4 Signal_2_PS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Target
@@ -1939,7 +2131,9 @@ float4 Signal_2_PS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
     0.001384762, 0.001678312, 0.002021715, 0.002420562, 0.002880460, 0.003406879, 0.004004985, 0.004679445, 0.005434218, 0.006272332, 0.007195654,
     0.008204665, 0.009298238, 0.010473450, 0.011725413, 0.013047155, 0.014429548, 0.015861306, 0.017329037, 0.018817382, 0.020309220, 0.021785952,
     0.023227857, 0.024614500, 0.025925203, 0.027139546, 0.028237893, 0.029201910, 0.030015081, 0.030663170, 0.031134640, 0.031420995, 0.031517031};
-	float chroma_filter_3_phase[25]={
+	float chroma_filter_3_phase[33]={
+    0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000,
+    0.000000000, 0.000000000, 0.000000000,
    -0.000118847,-0.000271306,-0.000502642,-0.000930833,-0.001451013,
    -0.002064744,-0.002700432,-0.003241276,-0.003524948,-0.003350284,
    -0.002491729,-0.000721149, 0.002164659, 0.006313635, 0.011789103,
@@ -1949,26 +2143,23 @@ float4 Signal_2_PS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
    -0.000174844,-0.000205844,-0.000149453,-0.000051693, 0.000000000,-0.000066171,-0.000245058,-0.000432928,-0.000472644,-0.000252236, 0.000198929,
     0.000687058, 0.000944112, 0.000803467, 0.000363199, 0.000013422, 0.000253402, 0.001339461, 0.002932972, 0.003983485, 0.003026683,-0.001102056,
    -0.008373026,-0.016897700,-0.022914480,-0.021642347,-0.028863273, 0.027271957, 0.054921920, 0.098342579, 0.139044281, 0.168055832, 0.178571429};
-	float luma_filter_3_phase[25]={
+	float luma_filter_3_phase[33]={
+    0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000,
+    0.000000000, 0.000000000, 0.000000000,
    -0.000012020,-0.000022146,-0.000013155,-0.000012020,-0.000049979,
    -0.000113940,-0.000122150,-0.000005612, 0.000170516, 0.000237199,
     0.000169640, 0.000285688, 0.000984574, 0.002018683, 0.002002275,
    -0.005909882,-0.012049081,-0.018222860,-0.022606931, 0.002460860,
     0.035868225, 0.084016453, 0.135563500, 0.175261268, 0.220176552};
-	float luma_filter_4_phase[25]={
-   -0.000472644,-0.000252236, 0.000198929, 0.000687058, 0.000944112,
-    0.000803467, 0.000363199, 0.000013422, 0.000253402, 0.001339461,
-    0.002932972, 0.003983485, 0.003026683,-0.001102056,-0.008373026,
-   -0.016897700,-0.022914480,-0.021642347,-0.028863273, 0.027271957,
-    0.054921920, 0.098342579, 0.139044281, 0.168055832, 0.178571429};
 	const int TAPS_2_phase=32;
 	const int TAPS_3_phase=24;
-	float res=ntsc_scale;
+	float res=ntsc_scale * nscale;
 	float3 signal=0.0;
-	float2 one=0.25*OrgSize.zz/res;
-	float2 tex_c=texcoord+float2(0.5*OrgSize.z/4.0,0.0);
+	float2 one=0.25*OrgSize.zz/res/speedup;
+	float2 tex_c=texcoord+float2(0.5/speedup*OrgSize.z/4.0,0.0);
+	if (tex_c.x * speedup > (1.00325)) discard;
 	float phase= ( ntsc_phase<1.5)?((OrgSize.x>300.0)?2.0:3.0):((ntsc_phase>2.5)?3.0:2.0);
-	if(ntsc_phase==4.0){phase=3.0;luma_filter_3_phase=luma_filter_4_phase;}
+	if(ntsc_phase>3.5){phase=3.0;luma_filter_3_phase=luma_filter_2_phase;}
 	float3 wsum =0.0.xxx;
 	float3 sums=wsum;
 	float3 tmps=wsum;
@@ -1981,7 +2172,7 @@ float4 Signal_2_PS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	float loob=loop+1.0;
 	float taps=0.0;
 	float ssub=loop-loop/ntsc_cscale1;
-	float mit=1.0+0.0375*pow(swoothstep(16.0,8.0,loop),0.5);
+	float mit=1.0+0.04*pow(swoothstep(16.0,8.0,loop),0.5);
 	float2 dx=float2(one.x*mit,0.0);
 	float2 xd=dx; int loopstart=int(TAPS_2_phase-loop);
 	for(i=loopstart;i<32;i++)
@@ -1990,7 +2181,7 @@ float4 Signal_2_PS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	j=offset+1.0;xd= (offset-loop)*dx;
 	sums=fetch_offset1(xd);
 	taps=max(j-ssub,0.0);
-	tmps=float3(luma_filter_2_phase[i], taps.xx );
+	tmps=float3(luma_filter_2_phase[max(i,0)], taps.xx );
 	wsum=wsum+tmps; signal+=sums*tmps;
 	}
 	taps=loob-ssub;
@@ -2002,19 +2193,19 @@ float4 Signal_2_PS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	{
 	float loop=min(ntsc_taps,TAPS_3_phase); one.y=one.y/ntsc_cscale2;
 	float mit=1.0;
-	if(ntsc_phase==4.0){loop=max(loop,8.0); mit=1.0+0.0375*pow(swoothstep(16.0,8.0,loop),0.5);}
+	if(ntsc_phase>3.5){loop=max(loop,8.0); mit=1.0+0.04*pow(swoothstep(16.0,8.0,loop),0.5);}
 	float3 dx=float3(one.x,one.y,0.0);
 	float3 xd=dx; int loopstart=int(TAPS_3_phase-loop);
 	dx.x*=mit;
-	for(i=loopstart;i<24;i++)
+	for(i=loopstart;i<32;i++)
 	{
 	offset=float(i-loopstart);
-	j=offset+1.0;xd.xy=(offset-loop)*dx.xy;
+	xd.xy=(offset-loop)*dx.xy;
 	sums=fetch_offset2(xd);
 	tmps=float3(luma_filter_3_phase[i], chroma_filter_3_phase[i].xx);
 	wsum=wsum+tmps; signal+=sums*tmps;
 	}
-	tmps=float3(luma_filter_3_phase[TAPS_3_phase], chroma_filter_3_phase[TAPS_3_phase], chroma_filter_3_phase[TAPS_3_phase]);
+	tmps=float3(luma_filter_3_phase[TAPS_2_phase], chroma_filter_3_phase[TAPS_2_phase], chroma_filter_3_phase[TAPS_2_phase]);
 	wsum=wsum+wsum+tmps;
 	signal+=texCD(NTSC_S03,tex_c).xyz*tmps;
 	signal =signal/wsum;
@@ -2022,7 +2213,7 @@ float4 Signal_2_PS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	signal.x=clamp( signal.x,0.0,1.0);
 	if(ntsc_ring>0.05)
 	{
-	float2 dx=float2(OrgSize.z/min(res,1.0),0.0);
+	float2 dx=float2(OrgSize.z/min(res,1.0)/speedup,0.0);
 	float a=texCD(NTSC_S03,tex_c-2.0*dx).a;
 	float b=texCD(NTSC_S03,tex_c-    dx).a;
 	float c=texCD(NTSC_S03,tex_c+2.0*dx).a;
@@ -2030,52 +2221,107 @@ float4 Signal_2_PS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	float e=texCD(NTSC_S03,tex_c       ).a;
 	signal.x=lerp(signal.x,clamp(signal.x,min(min(min(a,b),min(c,d)),e),max(max(max(a,b),max(c,d)),e)),ntsc_ring);
 	}
-	float x=get_luma(texCD(NTSC_S02, tex_c).rgb);
+	float x=get_luma(texCD(NTSC_S02, tex_c*float2(speedup, 1.0)).rgb);
 	return float4(signal,x);
 }
 
 float4 Signal_3_PS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Target
 {
-	float2 dx=float2(0.25*OrgSize.z/4.0,0.0);
-	float2 xx=float2(0.50*OrgSize.z,0.0);
-	float2 tex_c=texcoord+float2(0.5*OrgSize.z/4.0,0.0);float2 tcoord=tex_c-2.0*dx;
-	float2 tcoorb=(floor(OrgSize.xy*tex_c)+0.5)*OrgSize.zw;
-	float lcoord=OrgSize.x*(tex_c.x+dx.x )-0.5;
-	float fpx=frac(lcoord);
-	lcoord =(floor(lcoord)+0.5)*OrgSize.z;
+    float2 vtex_c0=texcoord / float2(speedup, 1.0);
+    float2 vtex_c1=(floor(vtex_c0*OrgSize.xy)+0.5)*OrgSize.zw;
+    float2 vtex_c=texcoord+float2(0.5*OrgSize.z/4.0,0.0);
+
+    float4 AdvSize= LumSize;
+
+    if(speedup > 1.25 && ((OrgSize.y > 500.0 && AdvSize.y > 820.0) || AdvSize.y > 820.0))
+    {
+        float3 signal = texCD(NTSC_S04, vtex_c0).xyz;
+        signal.x = pow(signal.x, 1.0/ntsc_gamma);
+        return float4(clamp(yiq2rgb(signal), 0.0, 1.0), 1.0);
+    }
+    else
+    {
+
+	float2 dx=float2(0.0625*OrgSize.z / speedup,0.0);
+	float2 xx=float2(0.5000*OrgSize.z / speedup,0.0);
+
+	float2 tcoorb=(floor(OrgSize.xy*vtex_c)+0.5)*OrgSize.zw;
+	float2 tcoord=vtex_c-2.0*dx;
+	float2 vTex=vtex_c;
+	if (speedup > 1.25) { tcoorb = vtex_c1; tcoord = vtex_c0; vTex = vtex_c0; }
 	float3 ll1=texCD(NTSC_S04,tcoord+ xx).xyz;
 	float3 ll2=texCD(NTSC_S04,tcoord- xx).xyz;
 	float dy=0.0;
-	xx=float2(OrgSize.z,0.0);
+	float2 yy = float2(0.0, OrgSize.w);
+	xx=float2(OrgSize.z/speedup,0.0);
 	float phase= (ntsc_phase<1.5)?((OrgSize.x>300.0)? 2.0:3.0):((ntsc_phase>2.5)?3.0:2.0);
-	if(ntsc_phase==4.0)phase=3.0;
+	if(ntsc_phase>3.5)phase=3.0;
+	float th=(phase<2.5)?0.025:0.0075;;
 	float ca=texCD(NTSC_S03,tcoorb-xx-xx).a;
 	float c0=texCD(NTSC_S03,tcoorb-xx   ).a;
 	float c1=texCD(NTSC_S03,tcoorb      ).a;
 	float c2=texCD(NTSC_S03,tcoorb+xx   ).a;
 	float cb=texCD(NTSC_S03,tcoorb+xx+xx).a;
-	float th=(phase<2.5)?0.025:0.0075;
 	float line0=    swoothstep(th,0.0,min(abs(c1-c0),abs(c2-c1)));
 	float line1=max(swoothstep(th,0.0,min(abs(ca-c0),abs(c2-cb))), line0 );
 	float line2=max(swoothstep(th,0.0,min(abs(ca-c2),abs(c0-cb))), line1 );
-	if( ntsc_rainbow>0.5&&phase<2.5)
+
+    float diffboost = 0.0;
+
+    if (ntsc_fonts > 0.255)
+    {
+        float b1  = texCD(NTSC_S03, tcoorb - yy).a;
+        float d1  = texCD(NTSC_S03, tcoorb + yy).a;
+        float d2  = texCD(NTSC_S03, tcoorb + xx + yy).a;
+
+        float maxdif = float(0.5 * (abs(c0-c1) + abs(c1-c2)) > (1.0 - ntsc_fonts));
+        float linecb = swoothstep(0.1, 0.0, max(abs(c1-b1), abs(c1-d1)));
+        linecb = linecb * float(abs(c1-b1) < 0.05 || abs(c2-d2) < 0.05);
+
+        float xdif1 = 0.0;
+        float xdif2 = 0.0;
+        float th   = 0.215;
+
+        for (float i = 0.5; i < 10.5; i++)
+        {
+            float j = i + 1.0;
+            ca  = texCD(NTSC_S04, tcoord -  i*xx).x;
+            c0  = texCD(NTSC_S04, tcoord -  j*xx).x;
+            c2 = texCD(NTSC_S04, tcoord +  i*xx).x;
+            cb = texCD(NTSC_S04, tcoord +  j*xx).x;
+            xdif1 = max(abs(ca - c0) - th, xdif1);
+            xdif2 = max(abs(cb - c2) - th, xdif2);
+        }
+
+        float linex   = swoothstep(0.0, 0.125, min(xdif1, xdif2));
+        diffboost     = min(linex * linecb * maxdif, 0.625);
+    }
+
+    float3 ref = texCD(NTSC_S04, tcoord).xyz;
+    float2 org = ref.yz;
+	if( ntsc_rainbow>0.5&&(phase<2.5 || ntsc_phase == 5.0))
 	{
-	float ybool1=1.0;bool ybool2=(c0==c1&&c1==c2);
+	float ybool1=1.0;
 	if((ntsc_rainbow<1.5)&&bool(line0))ybool1=0.0;else
-	if((ntsc_rainbow<2.5)&&bool(line2))ybool1=0.0;else
-	if(ybool2)ybool1=0.0;
-	float liine_no=floor( mod(OrgSize.y*tex_c.y,2.0));
+	if((ntsc_rainbow<2.5)&&bool(line2))ybool1=0.0;
+
+	float liine_no=floor( mod(OrgSize.y*vtex_c.y,2.0));
 	float frame_no=floor( mod(float(framecount),2.0));
 	float ii=abs(liine_no-frame_no);
 	dy=ii*OrgSize.w*ybool1;
+	float2 ref1 = texCD(NTSC_S04, tcoord + float2(0.0, -dy)).yz;
+				   
+	float2 ref2 = texCD(NTSC_S04, tcoord + float2(0.0,  dy)).yz;
+	float2 rdf1 = abs(org - ref1);
+	float2 rdf2 = abs(org - ref2);
+	rdf1        = rdf1 / max(rdf1 + rdf2, 0.0000001);
+
+	ref.yz = lerp(ref1, ref2, rdf1);
 	}
-	float3 ref=texCD(NTSC_S04,tcoord).xyz;
-	float2 org=ref.yz;
-	ref.yz= texCD(NTSC_S04,tcoord+float2(0.0,dy)).yz;
-	float lum1=min(texCD(NTSC_S03,tex_c-dx).a, texCD(NTSC_S03,tex_c+dx).a);
+	float lum1=min(texCD(NTSC_S03,vTex-dx).a, texCD(NTSC_S03,vTex+dx).a);
 	float lum2=ref.x ;
 	float3 ll3=abs(ll1-ll2);
-	float di=max(max(ll3.x,ll3.y),max(ll3.z,abs(ll1.x*ll1.x-ll2.x*ll2.x)));
+	float di=max(max(max(ll3.x,ll3.y),max(ll3.z,abs(ll1.x*ll1.x-ll2.x*ll2.x))),diffboost);
 	float df=pow(di,0.125);
 	float lc=swoothstep(0.20,0.10,abs(lum2-lum1))*df;
 	float tmp1=swoothstep(0.05-0.03*lc,0.425-0.375*lc,di);
@@ -2098,24 +2344,40 @@ float4 Signal_3_PS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	}
 	if((ntsc_charp1+ntsc_charp2)>0.25)
 	{
+	dx.x = 0.0625 * OrgSize.z;
+	float lcoord=OrgSize.x*(vtex_c.x+dx.x )-0.5;
+	float fpx=frac(lcoord);
+	lcoord =(floor(lcoord)+0.5)*OrgSize.z;
 	float mixer=sweight;
 	if(ntsc_shrp>0.25)mixer=zweight;
 	mixer =lerp(swoothstep(0.075,0.125,max(ll3.y,ll3.z)),swoothstep(0.015,0.0275,di),line2)*mixer;
 	mixer*=0.1*((phase<2.5)? ntsc_charp1:ntsc_charp2);
 	tcoord=float2(lcoord,tcoord.y);
-	float3 origin=rgb2yiq(lerp(texCD(NTSC_S02,tcoord).rgb,texCD(NTSC_S02,tcoord+xx).rgb,clamp(1.5*fpx-0.25,0.0,1.0)));
+	float3 origin=rgb2yiq(lerp(texCD(NTSC_S02,tcoord).rgb,texCD(NTSC_S02,tcoord+16.0*dx).rgb,clamp(1.5*fpx-0.25,0.0,1.0)));
 	signal.yz=lerp(signal.yz,origin.yz,mixer);
 	}
-	if(ntsc_rainbow==2.0&&phase<2.5){signal.yz=lerp(signal.yz,org,zweight);}
+
+    if ((RFNOISE1 + RFNOISE2) > 0.005)
+    {
+        float3 ns = NoiseNP3(vtex_c, float(framecount));
+        float Y   = lerp(0.375, 1.0, pow(signal.x, 0.2));
+
+        signal.x = clamp(signal.x + RFNOISE1 * ns.x,  0.00, 1.00);
+        signal.y = clamp(signal.y + Y * RFNOISE2 * (0.325 + 1.325 * abs(signal.y)) * ns.y, -0.60, 0.60);
+        signal.z = clamp(signal.z + Y * RFNOISE2 * (0.325 + 1.325 * abs(signal.z)) * ns.z, -0.53, 0.53);
+    }
 	signal.x=pow(signal.x,1.0/ntsc_gamma);
 	signal=clamp(yiq2rgb(signal),0.0,1.0);
-	return float4(signal,1.0);
+    zweight = (phase == 2.0 || ntsc_phase > 3.5) ? zweight : 1.0;
+	return float4(signal,zweight);
+    }
 }
 
 float4 SharpnessPS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Target
 {
-	float2 g01=float2(-0.5*OrgSize.z,0.0);
-	float2 g21=float2( 0.5*OrgSize.z,0.0);
+	float resmult = round(OrgSize.x / 300.0);
+	float2 g01=float2(-0.5*resmult*OrgSize.z,0.0);
+	float2 g21=float2( 0.5*resmult*OrgSize.z,0.0);
 	float3 c01=texCD(NTSC_S05,texcoord+g01).rgb;
 	float3 c21=texCD(NTSC_S05,texcoord+g21).rgb;
 	float3 c11=texCD(NTSC_S05,texcoord    ).rgb;
@@ -2127,19 +2389,21 @@ float4 SharpnessPS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	float3 di0=pow(mx1-mn1+0.00001,0.75);
 	float3 sharpen=lerp(CSHARPEN*CDETAILS,CSHARPEN,di0);
 	float3 res=clamp(lerp(c11,b11,-sharpen),mn1,mx1);
-	if(DEBLUR>1.125)
+	if(NDEBLUR>1.125)
 	{
 	float2 toxcoord=(floor(OrgSize.xy*texcoord)+0.5)*OrgSize.zw;
 	float l01=get_luma(texCD(NTSC_S02,texcoord+2.0*g01).rgb);
 	float l21=get_luma(texCD(NTSC_S02,texcoord+2.0*g21).rgb);
 	float l11=get_luma(texCD(NTSC_S02,toxcoord        ).rgb);
+	float dth = texCD(NTSC_S05,texcoord).a;
+	float DEB = max(lerp(0.375*NDEBLUR, NDEBLUR, max(1.0-DSMART, dth)), 1.0);
 	float d11=min(min(l01,l21),l11);
 	l11=max(max(l01,l21),l11);
 	float lmn=min(min(get_luma(c01),get_luma(c21)),get_luma(c11));float ln1=min(lerp(d11,lmn,lmn),lmn);
 	float lmx=max(max(get_luma(c01),get_luma(c21)),get_luma(c11));float lx1=max(lerp(lmx,l11,lmx),lmx);
 	float r11=get_luma(res);
-	float di1=max((r11-ln1),0.0)+0.00001;di1=pow(di1,DEBLUR);
-	float di2=max((lx1-r11),0.0)+0.00001;di2=pow(di2,DEBLUR);
+	float di1=max((r11-ln1),0.0)+0.00001;di1=pow(di1,DEB);
+	float di2=max((lx1-r11),0.0)+0.00001;di2=pow(di2,DEB);
 	float ratio=di1/(di1+di2);
 	float zharpen=lerp(ln1,lx1,ratio);
 	zharpen=min(zharpen,max(DREDGE*zharpen,r11));
@@ -2168,7 +2432,7 @@ float4 LuminancePS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	ltotal*=0.25;
 	ltotal=pow(0.577350269*ltotal,0.7);
 	float lhistory=texCD(NTSC_S07,float2(0.5,0.5)).a;
-	ltotal=lerp(ltotal,lhistory,lsmooth);
+	ltotal=lerp(ltotal,lhistory,min(lerp(lsmooth, lsmooth + lsdev, ltotal),0.99));
 	float3 l1=texCD(NTSC_S06,fuxcoord.xy   ).rgb;
 	float3 r1=texCD(NTSC_S06,fuxcoord.xy+dx).rgb;
 	float3 l2=texCD(NTSC_S06,fuxcoord.xy-dx).rgb;
@@ -2179,48 +2443,62 @@ float4 LuminancePS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	return float4(c1,c2,c3,ltotal);
 }
 
-float4 LinearizePS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Target
+float4 InterlacePS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Target
 {
-	float3 c1=texCD(NTSC_S06,fuxcoord).rgb;
-	float3 c2=texCD(NTSC_S06,fuxcoord+float2(0.0,OrgSize.w)).rgb;
-	if((downsample_levelx+downsample_levely)>0.025)
-	{
-	c1=fetch_pixel(fuxcoord);
-	c2=fetch_pixel(fuxcoord+float2(0.0,OrgSize.w));
-	}
-	float3 c=c1;
-	float intera=1.0;
-	float gamma_in=gamma_i;
-	float m1=max(max(c1.r,c1.g),c1.b);
-	float m2=max(max(c2.r,c2.g),c2.b);
-	float3 df=abs(c1-c2);
-	float d=max(max(df.r,df.g),df.b);
-	if(interm==2.0) d=lerp(0.1*d,10.0*d,step(m1/(m2+0.0001),m2/(m1+0.0001)));
-	float r=m1;
-	float yres_div=1.0;if(intres>1.25)yres_div=intres;
-	bool hscans=(hiscan>0.5);
-	if(interr<=OrgSize.y/yres_div&&interm>0.5&&intres!=1.0&&intres!=0.5||hscans)
-	{
-	intera=0.25;
-	float liine_no=floor( mod(OrgSize.y*fuxcoord.y,2.0));
-	float frame_no=floor( mod(float(framecount),2.0));
-	float ii=abs(liine_no-frame_no);
-	if(interm< 3.5)
-	{
-	c2=plant(lerp(c2,c2*c2,iscans),max(max(c2.r,c2.g),c2.b));
-	r=max(m1*ii,(1.0-iscanb)*min(m1,m2));
-	c=plant(lerp(lerp(c1,c2,min(lerp(m1,1.0-m2,min(m1,1.0-m1))/(d+0.00001),1.0)),c1,ii),r);
-	if(interm==3.0) c=(1.0-0.5*iscanb)*lerp(c2,c1,ii);
-	}
-	if(interm==4.0){c=plant(lerp(c,c*c,0.5*iscans),max(max(c.r,c.g),c.b))*(1.0-0.5*iscanb);
-	}
-	if(interm==5.0){c=lerp(c2,c1,0.5);c=plant(lerp(c,c*c,0.5*iscans),max(max(c.r,c.g),c.b))*(1.0-0.5*iscanb);
-	}
-	if(hscans)c=c1;
-	}
-	c=pow(c,gamma_in);
-	if(fuxcoord.x>0.5)gamma_in=intera;else gamma_in=1.0/gamma_in;
-	return float4(c,gamma_in);
+    float3 c1=texCD(NTSC_S02,fuxcoord).rgb;
+    float3 c2=texCD(NTSC_S02,fuxcoord+float2(0.0,OrgSize.w)).rgb;
+    if((downsample_levelx+downsample_levely)>0.025)
+    {
+    c1=fetch_pixel(fuxcoord);
+    c2=fetch_pixel(fuxcoord+float2(0.0,OrgSize.w));
+    }
+    float3 c=c1;
+    float intera=1.0;
+    float m1=max(max(c1.r,c1.g),c1.b);
+    float m2=max(max(c2.r,c2.g),c2.b);
+    float3 df=abs(c1-c2);
+    float d=max(max(df.r,df.g),df.b);
+    if(interm==2.0) d=lerp(0.1*d,10.0*d,step(m1/(m2+0.0001),m2/(m1+0.0001)));
+    float r=m1;
+    float yres_div=1.0;if(intres>1.25)yres_div=intres;
+    bool hscans=(hiscan>0.5);
+    if(interr<=OrgSize.y/yres_div&&interm>0.5&&intres!=1.0&&intres!=0.5||hscans)
+    {
+    intera=0.25;
+    float liine_no=floor( mod(OrgSize.y*fuxcoord.y,2.0));
+    float frame_no=floor( mod(float(framecount),2.0));
+    float ii=abs(liine_no-frame_no);
+    if(interm< 3.5 || interm > 5.5)
+    {
+    if (interm == 6.0) c = lerp(c2, c1, ii); else
+    {
+    c2=plant(lerp(c2,c2*c2,iscans),max(max(c2.r,c2.g),c2.b));
+    r=max(m1*ii,(1.0-iscanb)*min(m1,m2));
+    c=plant(lerp(lerp(c1,c2,min(lerp(m1,1.0-m2,min(m1,1.0-m1))/(d+0.00001),1.0)),c1,ii),r);
+    if(interm==3.0) c=(1.0-0.5*iscanb)*lerp(c2,c1,ii);
+    }
+    }
+    if(interm==4.0){c=plant(lerp(c,c*c,0.5*iscans),max(max(c.r,c.g),c.b))*(1.0-0.5*iscanb);
+    }
+    if(interm==5.0){c=lerp(c2,c1,0.5);c=plant(lerp(c,c*c,0.5*iscans),max(max(c.r,c.g),c.b))*(1.0-0.5*iscanb);
+    }
+    if(hscans)c=c1;
+    }
+    return float4(c,intera);
+}
+
+float4 LinearizeNewPS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Target
+{
+    float3 c = texCD(NTSC_S06,fuxcoord).rgb;
+    if((downsample_levelx+downsample_levely)>0.025)
+    {
+    c=fetch_pixel(fuxcoord);
+    }
+    float intera = texCD(NTSC_S0I,fuxcoord).a;
+    float gamma_in=gamma_i;
+    c=pow(c,gamma_in);
+    if(fuxcoord.x>0.5)gamma_in=intera;else gamma_in=1.0/gamma_in;
+    return float4(c,gamma_in);
 }
 
 float4 HGaussianPS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Target
@@ -2347,10 +2625,11 @@ float4 NTSC_TV1_PS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	float w=0.0;
 	float swum=0.0;
 	float wsum=0.0;
-	float xs=2.0*0.50;
-	float hsharpness=HSHARPNESS*xs*internal_res;
 	float3 cmax=0.0.xxx;
 	float3 cmin=1.0.xxx;
+	float xs=max(2.0*0.4, 1.0);
+	float hsharpness=HSHARPNESS*xs*filter_res;
+	xs=1.0/(2.0*LIGMA_H*LIGMA_H*xs*xs*filter_res*filter_res);
 	float sharp=crthd_h(hsharpness,xs) *S_SHARP;
 	float maxsharp=MAXS;
 	float FPR=hsharpness;
@@ -2392,12 +2671,14 @@ float4 NTSC_TV2_PS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	float lum=texCD(NTSC_S07,float2(0.5,0.5)).a;
 	float intera=texCD(NTSC_S08,float2(0.75,0.25)).a;
 	bool hscans=(hiscan>0.5);
-	bool interb=(((intera<0.35)||(no_scanlines>0.025))&&!hscans);
+	bool inter6=(intera<0.35&&interm==6.0);
+	bool interb=(((intera<0.35&&!inter6)||(no_scanlines>0.025))&&!hscans);
 	float4 AdvSize= LumSize;
 	float SourceY=AdvSize.y;
 	float sy=1.0;
 	if( intres==1.0)sy=max(round(SourceY/224.0),1.0);
 	if( intres>0.25&&intres!=1.0)sy=intres;
+	if (inter6) sy*=2.0;
 	AdvSize*=float4(1.0,1.0/sy,1.0,sy);
 	float2 lexcoord=fuxcoord.xy;
 	if(IOS> 0.0&& !interb)
@@ -2411,16 +2692,18 @@ float4 NTSC_TV2_PS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	}
 	float factor=1.0+(1.0-0.5*OS)*blm_2/100.0-lum*blm_2/100.0;
 	lexcoord=overscan(lexcoord,factor,factor);
+	texcoord.y = texcoord.y - VShift*OrgSize.w;
 	lexcoord=overscan(lexcoord,(OrgSize.x-overscanx)/OrgSize.x,(OrgSize.y-overscany)/OrgSize.y);
 	float2 pos = warp(lexcoord);
-	float2 coffset=0.5;
+	float ii = float(inter6)*(floor(mod(float(framecount), 2.0)));
+	float2 coffset = float2(0.5, 0.5 + 0.5*ii);
 	float2 ps=AdvSize.zw;
 	float2 OGL2Pos=pos*AdvSize.xy-coffset;
 	float2 fp=frac(OGL2Pos);
 	float2 dx=float2(ps.x,0.0);
 	float2 dy=float2(0.0,ps.y);
 	float f=fp.y;
-	float2 pC4=floor(OGL2Pos)*ps+0.5*ps;
+	float2 pC4=floor(OGL2Pos)*ps+0.5*ps; pC4.y = pC4.y + float(inter6)*0.25*dy.y;
 	pC4.x=pos.x;
 	if( intres==0.5<1.5)pC4.y=floor(pC4.y*OrgSize.y)*OrgSize.w+0.5*OrgSize.w;
 	if( interb&&no_scanlines<0.025|| hscans) pC4.y=pos.y;else
@@ -2451,7 +2734,7 @@ float4 NTSC_TV2_PS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	float3 cref1=lerp(stmp,solor1,beam_size);float creff1=pow(max(max(cref1.r,cref1.g),cref1.b),scan_falloff);
 	float3 cref2=lerp(stmp,solor2,beam_size);float creff2=pow(max(max(cref2.r,cref2.g),cref2.b),scan_falloff);
 	if(tds>0.5){shape1=lerp(scanline2,shape1,creff1);shape2=lerp(scanline2,shape2,creff2);}
-	float scanpix=OrgSize.y/OptSize.y;
+	float scanpix=OrgSize.y/NewSize.y;
 	float f1=frac(f-rolling_scan*float(framecount)*scanpix);
 	float f2=1.0-f1;
 	float m1=max(max(color1.r,color1.g),color1.b)+eps;
@@ -2492,11 +2775,12 @@ float4 ChromaticPS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	float gamma_in=1.0/texCD(NTSC_S08,float2(0.25,0.25)).a;
 	float lum=texCD(NTSC_S07,float2(0.5,0.5)).a;
 	float intera=texCD(NTSC_S08,float2(0.75,0.25)).a;
-	bool interb=((intera<0.35||no_scanlines>0.025)&&(hiscan<0.5));
+	bool inter6=(intera<0.35&&interm==6.0);
+	bool interb=(((intera<0.35&&!inter6)||(no_scanlines>0.025))&&!hiscan);
 	float2 lexcoord=fuxcoord.xy;
 	if(IOS> 0.0&& !interb)
 	{
-	float2 ofactor= OptSize.xy/OrgSize.xy;
+	float2 ofactor= NewSize.xy/OrgSize.xy;
 	float2 ifactor=(IOS<2.5)? floor(ofactor):ceil(ofactor);
 	float2 diff=ofactor/ifactor;
 	float scan=diff.y;
@@ -2505,10 +2789,14 @@ float4 ChromaticPS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	}
 	float factor=1.0+(1.0-0.5*OS)*blm_2/100.0-lum*blm_2/100.0;
 	lexcoord=overscan(lexcoord,factor,factor);
+	lexcoord.y=texcoord.y - VShift*OrgSize.w;
 	lexcoord=overscan(lexcoord,(OrgSize.x-overscanx)/OrgSize.x,(OrgSize.y-overscany)/OrgSize.y);
 	float2 pos0= warp(fuxcoord);
 	float2 pos1= fuxcoord;
 	float2 pos = warp(lexcoord);
+	float2 posb = 2.0*(pos0-0.5);
+	if (blm_2 < 0.5) posb = max(abs(posb), abs(2.0*(pos-0.5)))*sign(posb);
+	posb = 0.5*posb + 0.5;
 	float3 color=texCD(NTSC_S14,pos1).rgb;
 	float3 Bloom=texCD(NTSC_S13,pos ).rgb;
 	float3 Glow =texCD(NTSC_S11,pos ).rgb;
@@ -2532,9 +2820,10 @@ float4 ChromaticPS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	float3 cmask=one;
 	float3 dmask=one;
 	float3 emask=one;
-	float mwidths[15]={0.0,2.0,3.0,3.0,6.0,6.0,2.4,3.5,2.4,3.25,3.5,4.5,4.25,7.5,6.25};
+	float mwidths[16]={0.0,2.0,3.0,3.0,6.0,6.0,2.4,3.4,2.4,3.25,3.4,4.4,4.25,7.4,6.25,5.25};
 	float mwidth=mwidths[int(shadow_msk)];
 	float mask_compensate=frac(mwidth);
+	float mwidth0 = mwidth;
 	if(shadow_msk> 0.5)
 	{
 	float2 maskcoord= fracoord.xy;
@@ -2545,7 +2834,7 @@ float4 ChromaticPS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	float mscale=1.0;
 	float2 maskcoord0=maskcoord;
 	maskcoord.y=floor(maskcoord.y/masksize);
-	float mwidth0=max(mwidth+mask_zoom,2.0);
+	mwidth0=max(mwidth+mask_zoom,2.0);
 	if( mshift> 0.25)
 	{
 	float stagg_lvl=1.0; if(frac(mshift)>0.25)stagg_lvl=2.0;
@@ -2553,21 +2842,22 @@ float4 ChromaticPS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	maskcoord0.x=maskcoord0.x+next_line*0.5*mwidth0;
 	}
 	maskcoord=maskcoord0/masksize;
-	if(!zoomed)cmask*=crt_mask(floor(maskcoord),mx,mb);else
+	if(!zoomed)cmask=crt_mask(floor(maskcoord),mx,mb);else
 	{
 	mscale=mwidth0/mwidth;
 	float clerp= frac(maskcoord.x/mscale); if( zoom_mask>0.025 )clerp=clamp((1.0+zoom_mask)*clerp-0.5*zoom_mask,0.0,1.0);
-	float coord=floor(maskcoord.x/mscale); if(shadow_msk==13.0&&mask_zoom==-2.0)coord=ceil(maskcoord.x/mscale);
-	cmask*=lerp(crt_mask(float2(coord,maskcoord.y),mx,mb),crt_mask(float2(coord+1.0,maskcoord.y),mx,mb),clerp);
+
+	float coord = floor(maskcoord.x/mscale);
+	if (shadow_msk == 13.0 && mask_zoom == -2.0) coord = ceil(maskcoord.x/mscale);
+	cmask = lerp(crt_mask(float2(coord,maskcoord.y), mx, mb), crt_mask(float2(coord + 1.0, maskcoord.y), mx, mb), clerp);
 	}
-	if(slotwidth>0.5)swidth=slotwidth;float smask=1.0;
 	float sm_offset=0.0;bool bsm_offset=(shadow_msk==1.0||shadow_msk==3.0||shadow_msk==6.0||shadow_msk==7.0||shadow_msk==9.0||shadow_msk==12.0);
 	if( zoomed)
 	{
 	if(mask_layout<0.5&&bsm_offset)sm_offset=1.0;else
 	if(bsm_offset)sm_offset=-1.0;
 	}
-	swidth=round(swidth*mscale);
+	swidth=round(mwidth0); if (slotwidth > 0.5) swidth = slotwidth; float smask = 1.0;
 	smask =slt_mask(scoord+float2(sm_offset,0.0),mx,swidth);
 	smask =clamp(smask+lerp(smask_mit,0.0,w3*pow(colmx,0.3)),0.0,1.0);
 	emask =cmask;
@@ -2586,13 +2876,17 @@ float4 ChromaticPS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	color=pow(color,gamma_in/mask_gamma);
 	cmask=min(cmask,1.0);
 	dmask=min(dmask,1.0);
-	float mm=max(-2.75*cx*(cx-1.0)-lerp(0.075,0.165,cx),0.0);color=max(color,orig1*maskmid*mm);
 	}
 	float dark_compensate=lerp(max(clamp(lerp(mcut,maskstr,mx),0.0,1.0)-1.0+ mask_compensate,0.0)+1.0,1.0,mx); if(shadow_msk< 0.5) dark_compensate=1.0;
 	float bb=lerp(brightboost1,brightboost2,mx)* dark_compensate; color*=bb;
 	float3 Ref=texCD(NTSC_S08,pos).rgb;
 	float maxb=texCD(NTSC_S13,pos).a;
 	float vig =texCD(NTSC_S02,clamp(pos,0.0+0.5*OrgSize.zw,1.0-0.5*OrgSize.zw)).a;
+	if(pr_scan > 0.025)
+	{
+		float mbl = max(max(Bloom.r,Bloom.g),Bloom.b);
+		Bloom = lerp(Bloom, lerp(Bloom, plant(orig1,mbl), min(2.5*(1.0-w3),1.0)), min(2.0*pr_scan, 1.0));
+	}	
 	float3 bcmask=lerp(one,dmask,b_mask);
 	float3 hcmask=lerp(one,dmask,h_mask);
 	float3 Bloomy=Bloom;
@@ -2616,7 +2910,8 @@ float4 ChromaticPS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	{
 	float mbl=max(max(Bloom.r,Bloom.g),Bloom.b);
 	Bloom=plant(Bloom+Ref+orig1+Bloom*Bloom*Bloom,min(mbl*mbl,0.75));
-	color=color+2.0*lerp(1.0,w3,0.5*colmx)*hcmask*Bloom*(-halation);
+	Bloom = 2.0*lerp(1.0,w3,0.5*colmx)*hcmask*Bloom;
+	color = color -halation*Bloom;
 	}
 	color=min(color,1.0);
 	color=gc2(color,w3 );
@@ -2656,17 +2951,34 @@ float4 ChromaticPS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	float q=0.6*sqrt(max(max(color.r,color.g),color.b))+0.4;
 	if(abs(addnoised)>0.01)
 	{
-	float3 noise0=noise(float3(floor(OptSize.xy*fuxcoord/noiseresd),float(framecount)));
+	float3 noise0=noise(float3(floor(NewSize.xy*fuxcoord/noiseresd),float(framecount)));
 	if(noisetype<0.5)color=lerp(color,noise0,0.25*abs(addnoised)*q);else
 	color=min(color* lerp(1.0,1.5*noise0.x,0.5*abs(addnoised)),1.0);
 	}
 	colmx=max(max(orig1.r,orig1.g),orig1.b);
 	color=color+bmask*lerp(emask,0.125*(1.0-colmx)*color,min(20.0*colmx,1.0));
-	return float4(color*vig*humbars(lerp(pos.y,pos.x,bardir))*post_br*corner(pos0),1.0);
+	return lerp(float4(color*vig*humbars(lerp(pos.y, pos.x, bardir))*post_br*corner(posb), 1.0), 
+	            texCD(NTSC_S0S, (floor(pos1*OrgSize.xy)+0.5)*OrgSize.zw), step(pos1.x,oimage-0.00025));
+}
+
+float4 RatioSizePS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Target
+{
+	const bool margins=float(texcoord.x>=coord_w&&texcoord.x<=coord_e&&texcoord.y>=coord_n&&texcoord.y<=coord_s);
+	const float2 boxcoord=((texcoord-correct)*OptSize.xy+0)/BoxSize;
+	const float4 boxcolor=texCD(NTSC_S15,boxcoord);
+	return float4(margins*boxcolor.rgb,boxcolor.a);
 }
 
 technique CRT_Guest_NTSC
 {
+	pass StockPass
+	{
+	VertexShader=CropProcessVS;
+	PixelShader=StockPassPS;
+	RenderTarget=NTSC_T0S;
+	PrimitiveTopology=TRIANGLESTRIP;
+	VertexCount=4;
+	}
 	pass Afterglow
 	{
 	VertexShader=PostProcessVS;
@@ -2678,6 +2990,12 @@ technique CRT_Guest_NTSC
 	VertexShader=PostProcessVS;
 	PixelShader=PreShaderPS;
 	RenderTarget=NTSC_T02;
+	}
+	pass Interlace
+	{
+	VertexShader=PostProcessVS;
+	PixelShader=InterlacePS;
+	RenderTarget=NTSC_T0I;
 	}
 	pass NTSCPASS1
 	{
@@ -2712,7 +3030,7 @@ technique CRT_Guest_NTSC
 	pass Linearize
 	{
 	VertexShader=PostProcessVS;
-	PixelShader=LinearizePS;
+	PixelShader=LinearizeNewPS;
 	RenderTarget=NTSC_T08;
 	}
 	pass CRT_Pass1
@@ -2755,5 +3073,11 @@ technique CRT_Guest_NTSC
 	{
 	VertexShader=PostProcessVS;
 	PixelShader=ChromaticPS;
+	RenderTarget=NTSC_T15;
+	}
+	pass RatioSize
+	{
+	VertexShader=PostProcessVS;
+	PixelShader=RatioSizePS;
 	}
 }
