@@ -1388,7 +1388,7 @@ sampler NTSC_S07{Texture=NTSC_T07;AddressU=BORDER;AddressV=BORDER;AddressW=BORDE
 texture NTSC_T08{Width=2.0*Resolution_X;Height=Resolution_Y ;Format=RGBA16F;};
 sampler NTSC_S08{Texture=NTSC_T08;AddressU=BORDER;AddressV=BORDER;AddressW=BORDER;MagFilter=LINEAR;MinFilter=LINEAR;MipFilter=LINEAR;};
 
-texture NTSC_T09{Width=1.0*BUFFER_WIDTH;Height=Resolution_Y ;Format=RGBA16F;};
+texture NTSC_T09{Width=1.0*AspectSize_X;Height=Resolution_Y ;Format=RGBA16F;};
 sampler NTSC_S09{Texture=NTSC_T09;AddressU=BORDER;AddressV=BORDER;AddressW=BORDER;MagFilter=LINEAR;MinFilter=LINEAR;MipFilter=LINEAR;};
 
 texture NTSC_T10{Width=1.0*800.00000000;Height=Resolution_Y ;Format=RGBA16F;};
@@ -1403,7 +1403,7 @@ sampler NTSC_S12{Texture=NTSC_T12;AddressU=BORDER;AddressV=BORDER;AddressW=BORDE
 texture NTSC_T13{Width=1.0*800.00000000;Height=600.00000000 ;Format=RGBA16F;};
 sampler NTSC_S13{Texture=NTSC_T13;AddressU=BORDER;AddressV=BORDER;AddressW=BORDER;MagFilter=LINEAR;MinFilter=LINEAR;MipFilter=LINEAR;};
 
-texture NTSC_T14{Width=1.0*BUFFER_WIDTH;Height=BUFFER_HEIGHT;Format=RGBA16F;};
+texture NTSC_T14{Width=1.0*AspectSize_X;Height=AspectSize_Y;Format=RGBA16F;};
 sampler NTSC_S14{Texture=NTSC_T14;AddressU=BORDER;AddressV=BORDER;AddressW=BORDER;MagFilter=LINEAR;MinFilter=LINEAR;MipFilter=LINEAR;};
 
 texture NTSC_T15{Width=1.0*AspectSize_X;Height=AspectSize_Y;Format=RGBA16F;};
@@ -2195,7 +2195,7 @@ float4 Signal_2_PS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	float mit=1.0;
 	if(ntsc_phase>3.5){loop=max(loop,8.0); mit=1.0+0.04*pow(swoothstep(16.0,8.0,loop),0.5);}
 	float3 dx=float3(one.x,one.y,0.0);
-	float3 xd=dx; int loopstart=int(TAPS_3_phase-loop);
+	float3 xd=dx; int loopstart=int(32.0-loop);
 	dx.x*=mit;
 	for(i=loopstart;i<32;i++)
 	{
@@ -2683,7 +2683,7 @@ float4 NTSC_TV2_PS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	float2 lexcoord=fuxcoord.xy;
 	if(IOS> 0.0&& !interb)
 	{
-	float2 ofactor= OptSize.xy/OrgSize.xy;
+	float2 ofactor= NewSize.xy/OrgSize.xy;
 	float2 ifactor=(IOS<2.5)? floor(ofactor):ceil(ofactor);
 	float2 diff=ofactor/ifactor;
 	float scan=diff.y;
@@ -2692,7 +2692,7 @@ float4 NTSC_TV2_PS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	}
 	float factor=1.0+(1.0-0.5*OS)*blm_2/100.0-lum*blm_2/100.0;
 	lexcoord=overscan(lexcoord,factor,factor);
-	texcoord.y = texcoord.y - VShift*OrgSize.w;
+	lexcoord.y = lexcoord.y - VShift*OrgSize.w;
 	lexcoord=overscan(lexcoord,(OrgSize.x-overscanx)/OrgSize.x,(OrgSize.y-overscany)/OrgSize.y);
 	float2 pos = warp(lexcoord);
 	float ii = float(inter6)*(floor(mod(float(framecount), 2.0)));
@@ -2789,7 +2789,7 @@ float4 ChromaticPS(float4 position:SV_Position,float2 texcoord:TEXCOORD):SV_Targ
 	}
 	float factor=1.0+(1.0-0.5*OS)*blm_2/100.0-lum*blm_2/100.0;
 	lexcoord=overscan(lexcoord,factor,factor);
-	lexcoord.y=texcoord.y - VShift*OrgSize.w;
+	lexcoord.y=lexcoord.y - VShift*OrgSize.w;
 	lexcoord=overscan(lexcoord,(OrgSize.x-overscanx)/OrgSize.x,(OrgSize.y-overscany)/OrgSize.y);
 	float2 pos0= warp(fuxcoord);
 	float2 pos1= fuxcoord;
